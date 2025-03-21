@@ -1,0 +1,3561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Reading Station</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --primary: #5D5CDE;
+            --primary-dark: #4a49b1;
+            --primary-light: #7e7de6;
+            --bg-light: #FFFFFF;
+            --bg-dark: #181818;
+            --text-light: #333333;
+            --text-dark: #e0e0e0;
+            --accent: #FF5E5B;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #F44336;
+            --info: #2196F3;
+        }
+        
+        body {
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .dark {
+            --bg: var(--bg-dark);
+            --text: var(--text-dark);
+            --card-bg: #2a2a2a;
+            --border: #3f3f3f;
+        }
+        
+        .light {
+            --bg: var(--bg-light);
+            --text: var(--text-light);
+            --card-bg: #f5f5f5;
+            --border: #e0e0e0;
+        }
+        
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tab-button {
+            transition: background-color 0.2s, color 0.2s;
+        }
+        
+        .tab-button.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: var(--primary);
+            transition: width 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-primary:disabled {
+            background-color: #9b9bc6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background-color: var(--card-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            transition: background-color 0.2s;
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--border);
+        }
+        
+        .btn-accent {
+            background-color: var(--accent);
+            color: white;
+            transition: background-color 0.2s;
+        }
+        
+        .btn-accent:hover {
+            background-color: #e54d4a;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            max-width: 300px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 100;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .floating-resource {
+            position: fixed;
+            font-size: 22px;
+            animation: float-up 1.5s forwards;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        @keyframes float-up {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-60px);
+            }
+        }
+        
+        /* Custom scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--card-bg);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-dark);
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--primary-dark);
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .rarity-common {
+            color: #9e9e9e;
+        }
+        
+        .rarity-uncommon {
+            color: #4CAF50;
+        }
+        
+        .rarity-rare {
+            color: #2196F3;
+        }
+        
+        .rarity-epic {
+            color: #9C27B0;
+        }
+        
+        .rarity-legendary {
+            color: #FF9800;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        
+        /* Relic animation */
+        .relic-glow {
+            animation: glow 2s infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 5px -5px var(--primary);
+            }
+            to {
+                box-shadow: 0 0 20px 5px var(--primary);
+            }
+        }
+        
+        /* Resource icons */
+        .resource-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 4px;
+            font-size: 14px;
+            color: white;
+        }
+        
+        .resource-icon.kp {
+            background-color: #4CAF50; /* Green */
+        }
+        
+        .resource-icon.rp {
+            background-color: #2196F3; /* Blue */
+        }
+        
+        .resource-icon.qf {
+            background-color: #9C27B0; /* Purple */
+        }
+        
+        .resource-icon.ep {
+            background-color: #FF9800; /* Orange */
+        }
+    </style>
+</head>
+<body class="light min-h-screen">
+    <div id="app" class="container mx-auto px-4 py-6 max-w-6xl">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-6">
+            <div class="flex flex-col items-center md:items-start mb-4 md:mb-0">
+                <h1 class="text-2xl md:text-3xl font-bold flex items-center">
+                    <i class="fas fa-book-reader mr-2"></i> Cosmic Reading Station
+                </h1>
+                <p class="text-sm opacity-70">Track your reading journey in the cosmos</p>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-2">
+                <div class="resource-display flex items-center px-3 py-1 rounded-full bg-opacity-20 bg-green-500">
+                    <span class="resource-icon kp"><i class="fas fa-book"></i></span>
+                    <span id="kp-display">0</span> KP
+                </div>
+                <div class="resource-display flex items-center px-3 py-1 rounded-full bg-opacity-20 bg-blue-500">
+                    <span class="resource-icon rp"><i class="fas fa-flask"></i></span>
+                    <span id="rp-display">0</span> RP
+                </div>
+                <div class="resource-display flex items-center px-3 py-1 rounded-full bg-opacity-20 bg-purple-500">
+                    <span class="resource-icon qf"><i class="fas fa-atom"></i></span>
+                    <span id="qf-display">0</span> QF
+                </div>
+                <div class="resource-display flex items-center px-3 py-1 rounded-full bg-opacity-20 bg-yellow-500">
+                    <span class="resource-icon ep"><i class="fas fa-lightbulb"></i></span>
+                    <span id="ep-display">0</span> EP
+                </div>
+            </div>
+        </header>
+        
+        <div class="tab-container">
+            <div class="tab-buttons flex flex-wrap gap-1 mb-4">
+                <button id="tab-reading" class="tab-button active px-3 py-2 rounded-lg">
+                    <i class="fas fa-book mr-1"></i> Reading
+                </button>
+                <button id="tab-facilities" class="tab-button px-3 py-2 rounded-lg">
+                    <i class="fas fa-building mr-1"></i> Facilities
+                </button>
+                <button id="tab-research" class="tab-button px-3 py-2 rounded-lg">
+                    <i class="fas fa-flask mr-1"></i> Research
+                </button>
+                <button id="tab-relics" class="tab-button px-3 py-2 rounded-lg">
+                    <i class="fas fa-gem mr-1"></i> Relics
+                </button>
+                <button id="tab-enlightenment" class="tab-button px-3 py-2 rounded-lg">
+                    <i class="fas fa-lightbulb mr-1"></i> Enlightenment
+                </button>
+                <button id="tab-stats" class="tab-button px-3 py-2 rounded-lg">
+                    <i class="fas fa-chart-bar mr-1"></i> Stats
+                </button>
+                <button id="tab-settings" class="tab-button px-3 py-2 rounded-lg">
+                    <i class="fas fa-cog mr-1"></i> Settings
+                </button>
+            </div>
+            
+            <div class="tab-content">
+                <!-- Reading Tab -->
+                <div id="content-reading" class="tab-panel">
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <div class="w-full lg:w-1/2">
+                            <div class="card p-4 rounded-lg mb-6">
+                                <h2 class="text-xl font-bold mb-4">Log Reading Progress</h2>
+                                <form id="reading-form" class="space-y-4">
+                                    <div>
+                                        <label for="book-title" class="block mb-1">Book Title</label>
+                                        <input type="text" id="book-title" class="w-full px-3 py-2 rounded border bg-opacity-20 text-base" placeholder="Enter book title" required>
+                                    </div>
+                                    <div>
+                                        <label for="book-genre" class="block mb-1">Genre</label>
+                                        <select id="book-genre" class="w-full px-3 py-2 rounded border bg-opacity-20 text-base">
+                                            <option value="Fantasy">Fantasy</option>
+                                            <option value="Science Fiction">Science Fiction</option>
+                                            <option value="Mystery/Thriller">Mystery/Thriller</option>
+                                            <option value="Horror">Horror</option>
+                                            <option value="Non-Fiction">Non-Fiction</option>
+                                            <option value="Custom">Custom</option>
+                                        </select>
+                                    </div>
+                                    <div id="custom-genre-container" class="hidden">
+                                        <label for="custom-genre" class="block mb-1">Custom Genre</label>
+                                        <input type="text" id="custom-genre" class="w-full px-3 py-2 rounded border bg-opacity-20 text-base" placeholder="Enter custom genre">
+                                    </div>
+                                    <div>
+                                        <label for="pages-read" class="block mb-1">Pages Read</label>
+                                        <input type="number" id="pages-read" class="w-full px-3 py-2 rounded border bg-opacity-20 text-base" min="1" placeholder="Enter pages read" required>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="book-completed" class="mr-2">
+                                        <label for="book-completed">Mark book as completed</label>
+                                    </div>
+                                    <div class="flex justify-end">
+                                        <button type="submit" class="btn-primary px-4 py-2 rounded">Log Reading</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full lg:w-1/2">
+                            <div class="card p-4 rounded-lg mb-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-xl font-bold">Current Books</h2>
+                                    <div>
+                                        <button id="sort-books-btn" class="btn-secondary px-2 py-1 rounded text-sm">
+                                            <i class="fas fa-sort"></i> Sort
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="current-books-list" class="space-y-4 max-h-72 overflow-y-auto">
+                                    <!-- Books will be populated here -->
+                                    <div class="text-center py-6 opacity-50">
+                                        No books added yet. Start by logging your reading!
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card p-4 rounded-lg">
+                                <h2 class="text-xl font-bold mb-4">Completed Books</h2>
+                                <div id="completed-books-list" class="space-y-4 max-h-72 overflow-y-auto">
+                                    <!-- Completed books will be populated here -->
+                                    <div class="text-center py-6 opacity-50">
+                                        No completed books yet. Keep reading!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Facilities Tab -->
+                <div id="content-facilities" class="tab-panel hidden">
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <div class="w-full lg:w-1/3">
+                            <div class="card p-4 rounded-lg mb-6">
+                                <h2 class="text-xl font-bold mb-4">Discover New Facility</h2>
+                                <p class="mb-4">Spend Knowledge Points (KP) and Research Points (RP) to discover new facilities for your space station.</p>
+                                <div class="mb-4">
+                                    <div class="flex justify-between mb-1">
+                                        <span>Discovery Cost:</span>
+                                        <span id="facility-discovery-cost">50 KP, 10 RP</span>
+                                    </div>
+                                </div>
+                                <button id="discover-facility-btn" class="btn-primary w-full py-2 rounded">Discover New Facility</button>
+                            </div>
+                            
+                            <div class="card p-4 rounded-lg">
+                                <h2 class="text-xl font-bold mb-4">Your Facilities</h2>
+                                <div id="owned-facilities-list" class="space-y-4 max-h-96 overflow-y-auto">
+                                    <!-- Owned facilities will be populated here -->
+                                    <div class="text-center py-6 opacity-50">
+                                        No facilities yet. Discover your first facility!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full lg:w-2/3">
+                            <div class="card p-4 rounded-lg">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-xl font-bold">Discovered Facilities</h2>
+                                    <div>
+                                        <button id="sort-facilities-btn" class="btn-secondary px-2 py-1 rounded text-sm">
+                                            <i class="fas fa-sort"></i> Sort
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="discovered-facilities-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                                    <!-- Discovered facilities will be populated here -->
+                                    <div class="text-center py-6 opacity-50 col-span-2">
+                                        No facilities discovered yet. Use the Discovery button to find new facilities!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Research Tab -->
+                <div id="content-research" class="tab-panel hidden">
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <div class="w-full lg:w-1/3">
+                            <div class="card p-4 rounded-lg mb-6">
+                                <h2 class="text-xl font-bold mb-4">Discover New Research</h2>
+                                <p class="mb-4">Spend Research Points (RP) to discover new technologies for your space station.</p>
+                                <div class="mb-4">
+                                    <div class="flex justify-between mb-1">
+                                        <span>Discovery Cost:</span>
+                                        <span id="research-discovery-cost">30 RP</span>
+                                    </div>
+                                </div>
+                                <button id="discover-research-btn" class="btn-primary w-full py-2 rounded">Discover New Research</button>
+                            </div>
+                            
+                            <div class="card p-4 rounded-lg mb-6">
+                                <h2 class="text-xl font-bold mb-4">RP Generation</h2>
+                                <div class="mb-4">
+                                    <div class="flex justify-between mb-1">
+                                        <span>Current Rate:</span>
+                                        <span id="rp-generation-rate">0.5 RP/min</span>
+                                    </div>
+                                    <div class="progress-bar bg-gray-200 mb-2">
+                                        <div id="rp-progress-bar" class="progress-fill" style="width: 0%"></div>
+                                    </div>
+                                    <div class="flex justify-between text-xs opacity-70">
+                                        <span>Progress to next RP</span>
+                                        <span id="rp-progress-percent">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card p-4 rounded-lg">
+                                <h2 class="text-xl font-bold mb-4">Your Research Projects</h2>
+                                <div id="owned-research-list" class="space-y-4 max-h-96 overflow-y-auto">
+                                    <!-- Owned research will be populated here -->
+                                    <div class="text-center py-6 opacity-50">
+                                        No research projects yet. Discover your first research!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full lg:w-2/3">
+                            <div class="card p-4 rounded-lg">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-xl font-bold">Discovered Research</h2>
+                                    <div>
+                                        <button id="sort-research-btn" class="btn-secondary px-2 py-1 rounded text-sm">
+                                            <i class="fas fa-sort"></i> Sort
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="discovered-research-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                                    <!-- Discovered research will be populated here -->
+                                    <div class="text-center py-6 opacity-50 col-span-2">
+                                        No research discovered yet. Use the Discovery button to find new research!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Relics Tab -->
+                <div id="content-relics" class="tab-panel hidden">
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <div class="w-full lg:w-1/3">
+                            <div class="card p-4 rounded-lg mb-6">
+                                <h2 class="text-xl font-bold mb-4">Hunt for Galactic Relics</h2>
+                                <p class="mb-4">Spend Quantum Fragments (QF) to hunt for powerful galactic relics that persist across enlightenments.</p>
+                                <div class="mb-4">
+                                    <div class="flex justify-between mb-1">
+                                        <span>Hunt Cost:</span>
+                                        <span id="relic-hunt-cost">50 QF</span>
+                                    </div>
+                                </div>
+                                <div id="relic-hunt-container">
+                                    <button id="hunt-relic-btn" class="btn-primary w-full py-2 rounded">Hunt for Relic</button>
+                                </div>
+                                <div id="relic-hunting-container" class="hidden">
+                                    <div class="mb-2">
+                                        <div class="flex justify-between mb-1">
+                                            <span>Hunt Progress:</span>
+                                            <span id="relic-hunt-progress">0%</span>
+                                        </div>
+                                        <div class="progress-bar bg-gray-200">
+                                            <div id="relic-hunt-progress-bar" class="progress-fill" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between mb-2">
+                                        <span>Time Remaining:</span>
+                                        <span id="relic-hunt-time-remaining">00:00:00</span>
+                                    </div>
+                                    <button id="cancel-relic-hunt-btn" class="btn-accent w-full py-2 rounded">Cancel Hunt</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full lg:w-2/3">
+                            <div class="card p-4 rounded-lg">
+                                <h2 class="text-xl font-bold mb-4">Your Relics Collection</h2>
+                                <div id="relics-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                                    <!-- Relics will be populated here -->
+                                    <div class="text-center py-6 opacity-50 col-span-2">
+                                        No relics found yet. Hunt for your first relic!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Enlightenment Tab -->
+                <div id="content-enlightenment" class="tab-panel hidden">
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <div class="w-full lg:w-1/3">
+                            <div class="card p-4 rounded-lg mb-6">
+                                <h2 class="text-xl font-bold mb-4">Enlightenment</h2>
+                                <p class="mb-4">Perform an enlightenment to reset your progress and gain Enlightenment Points (EP) for permanent upgrades.</p>
+                                <div class="mb-4">
+                                    <div class="flex justify-between mb-1">
+                                        <span>Requirements:</span>
+                                    </div>
+                                    <ul class="list-disc list-inside space-y-1 mb-4">
+                                        <li id="req-books" class="text-red-500">
+                                            <i class="fas fa-times-circle mr-1"></i> Complete 5 books
+                                            <span class="ml-1">(<span id="req-books-count">0</span>/5)</span>
+                                        </li>
+                                        <li id="req-facilities" class="text-red-500">
+                                            <i class="fas fa-times-circle mr-1"></i> Have 3 facilities
+                                            <span class="ml-1">(<span id="req-facilities-count">0</span>/3)</span>
+                                        </li>
+                                        <li id="req-research" class="text-red-500">
+                                            <i class="fas fa-times-circle mr-1"></i> Have 3 research projects
+                                            <span class="ml-1">(<span id="req-research-count">0</span>/3)</span>
+                                        </li>
+                                    </ul>
+                                    <div class="flex justify-between mb-1">
+                                        <span>Potential EP Gain:</span>
+                                        <span id="potential-ep-gain">0</span>
+                                    </div>
+                                </div>
+                                <button id="enlightenment-btn" class="btn-primary w-full py-2 rounded" disabled>
+                                    Perform Enlightenment
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full lg:w-2/3">
+                            <div class="card p-4 rounded-lg">
+                                <h2 class="text-xl font-bold mb-4">Enlightenment Upgrades</h2>
+                                <div id="enlightenment-upgrades-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                                    <!-- Enlightenment upgrades will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stats Tab -->
+                <div id="content-stats" class="tab-panel hidden">
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <div class="w-full lg:w-1/2">
+                            <div class="card p-4 rounded-lg mb-6">
+                                <h2 class="text-xl font-bold mb-4">All-Time Stats</h2>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h3 class="font-bold mb-2">Reading</h3>
+                                        <ul class="space-y-2">
+                                            <li class="flex justify-between">
+                                                <span>Books completed:</span>
+                                                <span id="stats-all-books-completed">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Most books in one playthrough:</span>
+                                                <span id="stats-all-most-books">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Total pages read:</span>
+                                                <span id="stats-all-pages-read">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Most pages in one playthrough:</span>
+                                                <span id="stats-all-most-pages">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Most pages read in one day:</span>
+                                                <span id="stats-all-most-pages-day">0</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold mb-2">Resources & Progress</h3>
+                                        <ul class="space-y-2">
+                                            <li class="flex justify-between">
+                                                <span>Total KP generated:</span>
+                                                <span id="stats-all-kp-generated">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Total RP generated:</span>
+                                                <span id="stats-all-rp-generated">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Total QF gained:</span>
+                                                <span id="stats-all-qf-gained">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Total EP earned:</span>
+                                                <span id="stats-all-ep-earned">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Total number of enlightenments:</span>
+                                                <span id="stats-all-prestige-count">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Total relics found:</span>
+                                                <span id="stats-all-relics-found">0</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full lg:w-1/2">
+                            <div class="card p-4 rounded-lg">
+                                <h2 class="text-xl font-bold mb-4">Current Playthrough Stats</h2>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h3 class="font-bold mb-2">Reading</h3>
+                                        <ul class="space-y-2">
+                                            <li class="flex justify-between">
+                                                <span>Books completed:</span>
+                                                <span id="stats-current-books-completed">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Total pages read:</span>
+                                                <span id="stats-current-pages-read">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Most pages read in one day:</span>
+                                                <span id="stats-current-most-pages-day">0</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold mb-2">Resources</h3>
+                                        <ul class="space-y-2">
+                                            <li class="flex justify-between">
+                                                <span>Total KP generated:</span>
+                                                <span id="stats-current-kp-generated">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Total RP generated:</span>
+                                                <span id="stats-current-rp-generated">0</span>
+                                            </li>
+                                            <li class="flex justify-between">
+                                                <span>Total QF gained:</span>
+                                                <span id="stats-current-qf-gained">0</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings Tab -->
+                <div id="content-settings" class="tab-panel hidden">
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <div class="w-full lg:w-1/2">
+                            <div class="card p-4 rounded-lg mb-6">
+                                <h2 class="text-xl font-bold mb-4">Game Settings</h2>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <span>Dark Mode</span>
+                                        <label class="relative inline-block w-12 h-6 cursor-pointer">
+                                            <input id="dark-mode-toggle" type="checkbox" class="sr-only peer">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <span>Text Size</span>
+                                        <div class="flex space-x-2">
+                                            <button id="text-size-smaller" class="btn-secondary px-2 py-1 rounded text-sm">
+                                                <i class="fas fa-minus"></i>
+                                            </button>
+                                            <button id="text-size-reset" class="btn-secondary px-2 py-1 rounded text-sm">
+                                                Reset
+                                            </button>
+                                            <button id="text-size-larger" class="btn-secondary px-2 py-1 rounded text-sm">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <span>Show Notifications</span>
+                                        <label class="relative inline-block w-12 h-6 cursor-pointer">
+                                            <input id="notifications-toggle" type="checkbox" class="sr-only peer" checked>
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                        </label>
+                                    </div>
+                                    
+                                    <div>
+                                        <button id="save-game-btn" class="btn-primary px-4 py-2 rounded w-full mb-2">
+                                            <i class="fas fa-save mr-1"></i> Save Game
+                                        </button>
+                                        
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <button id="export-game-btn" class="btn-secondary px-3 py-2 rounded text-sm">
+                                                <i class="fas fa-file-export mr-1"></i> Export Save
+                                            </button>
+                                            
+                                            <button id="import-game-btn" class="btn-secondary px-3 py-2 rounded text-sm">
+                                                <i class="fas fa-file-import mr-1"></i> Import Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <button id="hard-reset-btn" class="btn-accent px-4 py-2 rounded w-full">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i> Hard Reset
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card p-4 rounded-lg">
+                                <h2 class="text-xl font-bold mb-4">Support the Developer</h2>
+                                <p class="mb-4">If you enjoy Cosmic Reading Station, consider supporting the developer:</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <a href="https://ko-fi.com/cygryu" target="_blank" class="btn-primary px-4 py-2 rounded text-center">
+                                        <i class="fas fa-mug-hot mr-1"></i> Support on Ko-Fi
+                                    </a>
+                                    <a href="https://www.paypal.com/paypalme/sofiansu?country.x=ID&locale.x=en_US" target="_blank" class="btn-primary px-4 py-2 rounded text-center">
+                                        <i class="fab fa-paypal mr-1"></i> Donate via PayPal
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="w-full lg:w-1/2">
+                            <div class="card p-4 rounded-lg">
+                                <h2 class="text-xl font-bold mb-4">About</h2>
+                                <div class="space-y-4">
+                                    <p>Cosmic Reading Station combines a reading tracker with space station building mechanics. Track your reading journey, build facilities, research technologies, and hunt for relics in the vastness of space.</p>
+                                    
+                                    <div class="bg-opacity-10 bg-primary p-4 rounded-lg">
+                                        <h3 class="font-bold mb-2">How to Play</h3>
+                                        <ul class="list-disc list-inside space-y-1">
+                                            <li>Log your reading to earn Knowledge Points (KP)</li>
+                                            <li>Build facilities to increase your resource generation</li>
+                                            <li>Research technologies to unlock new capabilities</li>
+                                            <li>Hunt for relics using Quantum Fragments (QF)</li>
+                                            <li>Perform enlightenment to earn permanent upgrades</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="bg-opacity-10 bg-primary p-4 rounded-lg">
+                                        <h3 class="font-bold mb-2">Resources</h3>
+                                        <ul class="list-disc list-inside space-y-1">
+                                            <li><strong>Knowledge Points (KP):</strong> Earned by reading books, used to build facilities</li>
+                                            <li><strong>Research Points (RP):</strong> Generated over time, used for research</li>
+                                            <li><strong>Quantum Fragments (QF):</strong> Randomly gained while reading, used to hunt for relics</li>
+                                            <li><strong>Enlightenment Points (EP):</strong> Earned through ascension, used for permanent upgrades</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="text-center opacity-70 text-sm pt-4">
+                                        <p>Version 1.0.0</p>
+                                        <p>Developed by CygRyu</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="export-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 class="text-xl font-bold mb-4">Export Game Save</h2>
+            <p class="mb-4">Copy this code to save your game:</p>
+            <textarea id="export-code" class="w-full h-32 px-3 py-2 rounded border mb-4 text-sm" readonly></textarea>
+            <div class="flex justify-end">
+                <button id="copy-export-btn" class="btn-primary px-4 py-2 rounded">
+                    <i class="fas fa-copy mr-1"></i> Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="import-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 class="text-xl font-bold mb-4">Import Game Save</h2>
+            <p class="mb-4">Paste your save code below:</p>
+            <textarea id="import-code" class="w-full h-32 px-3 py-2 rounded border mb-4 text-sm" placeholder="Paste save code here..."></textarea>
+            <div class="flex justify-end space-x-2">
+                <button id="cancel-import-btn" class="btn-secondary px-4 py-2 rounded">Cancel</button>
+                <button id="confirm-import-btn" class="btn-primary px-4 py-2 rounded">Import Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="reset-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 class="text-xl font-bold mb-4">Hard Reset Confirmation</h2>
+            <p class="mb-4">Are you sure you want to reset your game? This will delete all your progress and cannot be undone.</p>
+            <div class="flex justify-end space-x-2">
+                <button id="cancel-reset-btn" class="btn-secondary px-4 py-2 rounded">Cancel</button>
+                <button id="confirm-reset-btn" class="btn-accent px-4 py-2 rounded">Reset Game</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notification Area -->
+    <div id="notification-area"></div>
+    
+    <script>
+        // Game Data Structure
+        let gameData = {
+            resources: {
+                kp: 10,
+                rp: 10,
+                qf: 0,
+                ep: 0
+            },
+            resourcesGenerated: {
+                kp: 0,
+                rp: 0,
+                qf: 0,
+                ep: 0
+            },
+            books: {
+                current: [],
+                completed: []
+            },
+            facilities: {
+                discovered: [],
+                owned: []
+            },
+            research: {
+                discovered: [],
+                owned: []
+            },
+            relics: [],
+            enlightenmentUpgrades: [
+                {
+                    id: "faster-research",
+                    name: "Faster Research",
+                    description: "Increase base RP generation by 20% per level",
+                    baseEffect: 0.2,
+                    baseCost: 5,
+                    costScale: 1.5,
+                    maxLevel: 10,
+                    level: 0,
+                    getEffect: function() { return this.baseEffect * this.level; },
+                    getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                },
+                {
+                    id: "kp-efficiency",
+                    name: "Knowledge Efficiency",
+                    description: "Increase KP gained from reading by 15% per level",
+                    baseEffect: 0.15,
+                    baseCost: 4,
+                    costScale: 1.5,
+                    maxLevel: 10,
+                    level: 0,
+                    getEffect: function() { return this.baseEffect * this.level; },
+                    getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                },
+                {
+                    id: "qf-chance",
+                    name: "Quantum Perception",
+                    description: "Increase chance of finding QF when reading by 10% per level",
+                    baseEffect: 0.1,
+                    baseCost: 6,
+                    costScale: 1.7,
+                    maxLevel: 8,
+                    level: 0,
+                    getEffect: function() { return this.baseEffect * this.level; },
+                    getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                },
+                {
+                    id: "qf-retention",
+                    name: "Quantum Memory",
+                    description: "Increase QF retained after enlightenment by 10% per level (base: 50%)",
+                    baseEffect: 0.1,
+                    baseCost: 8,
+                    costScale: 1.6,
+                    maxLevel: 5,
+                    level: 0,
+                    getEffect: function() { return 0.5 + (this.baseEffect * this.level); },
+                    getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                },
+                {
+                    id: "facility-retention",
+                    name: "Facility Preservation",
+                    description: "Retain 1 facility after enlightenment per level",
+                    baseEffect: 1,
+                    baseCost: 10,
+                    costScale: 2,
+                    maxLevel: 5,
+                    level: 0,
+                    getEffect: function() { return this.baseEffect * this.level; },
+                    getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                },
+                {
+                    id: "research-retention",
+                    name: "Research Archive",
+                    description: "Retain 1 research after enlightenment per level",
+                    baseEffect: 1,
+                    baseCost: 12,
+                    costScale: 2,
+                    maxLevel: 5,
+                    level: 0,
+                    getEffect: function() { return this.baseEffect * this.level; },
+                    getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                },
+                {
+                    id: "offline-time",
+                    name: "Time Dilation",
+                    description: "Increase maximum offline progress time by 4 hours per level (base: 4 hours)",
+                    baseEffect: 4,
+                    baseCost: 15,
+                    costScale: 1.8,
+                    maxLevel: 5,
+                    level: 0,
+                    getEffect: function() { return 4 + (this.baseEffect * this.level); },
+                    getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                }
+            ],
+            stats: {
+                allTime: {
+                    booksCompleted: 0,
+                    mostBooksInOneRun: 0,
+                    pagesRead: 0,
+                    mostPagesInOneRun: 0,
+                    mostPagesInOneDay: 0,
+                    kpGenerated: 0,
+                    rpGenerated: 0,
+                    qfGained: 0,
+                    epEarned: 0,
+                    prestigeCount: 0,
+                    relicsFound: 0
+                },
+                currentRun: {
+                    booksCompleted: 0,
+                    pagesRead: 0,
+                    mostPagesInOneDay: 0,
+                    kpGenerated: 0,
+                    rpGenerated: 0,
+                    qfGained: 0,
+                    dailyPages: {}
+                }
+            },
+            settings: {
+                darkMode: false,
+                textSize: 1,
+                showNotifications: true,
+                autoSave: true
+            },
+            lastSave: Date.now(),
+            lastActivity: Date.now(),
+            relicHunt: null,
+            discoveryData: {
+                facilityDiscoveryCost: { kp: 50, rp: 10 },
+                researchDiscoveryCost: { rp: 30 },
+                relicHuntCost: 50,
+                relicHuntIncrease: 5
+            },
+            multipliers: {
+                rpGen: 0.5, // Base RP generation per minute
+                qfChance: 0.05 // Base chance to get QF when reading (5%)
+            },
+            rpProgress: {
+                current: 0,
+                threshold: 1
+            }
+        };
+        
+        // Game constants
+        const SAVE_INTERVAL = 60000; // 60 seconds
+        const RESOURCE_TICK_INTERVAL = 1000; // 1 second
+        const MAX_RELIC_HUNT_TIME = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+        
+        // Names for procedural generation
+        const NAMES = {
+            facilities: {
+                prefixes: ["Quantum", "Cosmic", "Neural", "Temporal", "Stellar", "Photonic", "Graviton", "Nebula", "Void", "Astral", "Lunar", "Plasma", "Solar", "Fusion", "Particle"],
+                mains: ["Library", "Repository", "Observatory", "Laboratory", "Archive", "Nexus", "Core", "Chamber", "Matrix", "Hub", "Amplifier", "Accelerator", "Conduit", "Processor", "Node"],
+                suffixes: ["Complex", "Array", "Network", "Cluster", "Grid", "Engine", "Terminal", "Relay", "Station", "Unit", "System", "Mainframe", "Sector", "Vault", "Center"]
+            },
+            research: {
+                prefixes: ["Advanced", "Enhanced", "Improved", "Optimized", "Refined", "Experimental", "Theoretical", "Applied", "Practical", "Specialized", "Generalized", "Integrated", "Focused", "Universal", "Resonant"],
+                mains: ["Cognition", "Knowledge", "Learning", "Memory", "Comprehension", "Understanding", "Analysis", "Synthesis", "Processing", "Perception", "Recollection", "Absorption", "Retention", "Encoding", "Decoding"],
+                suffixes: ["Algorithms", "Methodologies", "Frameworks", "Systems", "Paradigms", "Models", "Techniques", "Protocols", "Strategies", "Approaches", "Procedures", "Mechanisms", "Processes", "Operations", "Functions"]
+            },
+            relics: {
+                prefixes: ["Ancient", "Eternal", "Primordial", "Forgotten", "Mysterious", "Celestial", "Divine", "Eldritch", "Arcane", "Transcendent", "Cosmic", "Abyssal", "Ethereal", "Crystalline", "Dimensional"],
+                mains: ["Codex", "Artifact", "Relic", "Tome", "Scroll", "Grimoire", "Crystal", "Shard", "Fragment", "Emblem", "Medallion", "Sigil", "Prism", "Monad", "Cipher"],
+                suffixes: ["of Knowledge", "of Wisdom", "of Infinity", "of Eternity", "of the Cosmos", "of Enlightenment", "of Ascension", "of Transcendence", "of Understanding", "of Comprehension", "of the Void", "of Creation", "of Time", "of Space", "of Reality"]
+            }
+        };
+        
+        // Effect types for procedural generation
+        const EFFECT_TYPES = {
+            facilities: [
+                { type: "kp_bonus", description: "Increase KP gained from reading by {value}%" },
+                { type: "rp_generation", description: "Generate {value} additional RP per minute" },
+                { type: "qf_chance", description: "Increase chance of finding QF when reading by {value}%" },
+                { type: "facility_cost", description: "Reduce the cost of new facilities by {value}%" },
+                { type: "research_cost", description: "Reduce the cost of research by {value}%" },
+                { type: "kp_per_completion", description: "Gain {value} additional KP when completing a book" }
+            ],
+            research: [
+                { type: "rp_bonus", description: "Increase RP generation by {value}%" },
+                { type: "kp_efficiency", description: "Improve efficiency of KP generation by {value}%" },
+                { type: "qf_bonus", description: "Increase QF gained when found by {value}" },
+                { type: "relic_time", description: "Reduce relic hunt time by {value}%" },
+                { type: "auto_reading", description: "Automatically generate {value} KP per minute" },
+                { type: "facility_output", description: "Increase output of all facilities by {value}%" }
+            ],
+            relics: [
+                { type: "kp_multiplier", description: "Multiply all KP gains by {value}" },
+                { type: "rp_multiplier", description: "Multiply all RP gains by {value}" },
+                { type: "qf_multiplier", description: "Multiply all QF gains by {value}" },
+                { type: "ep_multiplier", description: "Multiply all EP gains by {value}" },
+                { type: "all_resource_boost", description: "Boost all resource generation by {value}%" },
+                { type: "prestige_bonus", description: "Gain {value}% more EP when performing enlightenment" }
+            ]
+        };
+        
+        // Rarity configurations
+        const RARITIES = {
+            common: { 
+                chance: 0.5,
+                label: "Common",
+                class: "rarity-common",
+                effectMultiplier: 1.0,
+                huntTime: 30 * 60 * 1000 // 30 minutes
+            },
+            uncommon: { 
+                chance: 0.3,
+                label: "Uncommon",
+                class: "rarity-uncommon",
+                effectMultiplier: 1.5,
+                huntTime: 60 * 60 * 1000 // 1 hour
+            },
+            rare: { 
+                chance: 0.15,
+                label: "Rare",
+                class: "rarity-rare",
+                effectMultiplier: 2.0,
+                huntTime: 2 * 60 * 60 * 1000 // 2 hours
+            },
+            epic: { 
+                chance: 0.05,
+                label: "Epic",
+                class: "rarity-epic",
+                effectMultiplier: 3.0,
+                huntTime: 4 * 60 * 60 * 1000 // 4 hours
+            }
+        };
+        
+        // Utility functions
+        function formatNumber(num) {
+            if (num >= 1e6) {
+                return (num / 1e6).toFixed(2) + 'M';
+            } else if (num >= 1e3) {
+                return (num / 1e3).toFixed(1) + 'K';
+            } else {
+                return Math.floor(num);
+            }
+        }
+        
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+        
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+        
+        function randomElement(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+        
+        function generateProcedural(typeData) {
+            const prefix = randomElement(typeData.prefixes);
+            const main = randomElement(typeData.mains);
+            const suffix = randomElement(typeData.suffixes);
+            
+            // 50% chance to include prefix, 50% chance to include suffix
+            let name = main;
+            if (Math.random() < 0.5) {
+                name = prefix + " " + name;
+            }
+            if (Math.random() < 0.5) {
+                name = name + " " + suffix;
+            }
+            
+            return name;
+        }
+        
+        function formatTime(ms) {
+            const seconds = Math.floor((ms / 1000) % 60);
+            const minutes = Math.floor((ms / (1000 * 60)) % 60);
+            const hours = Math.floor((ms / (1000 * 60 * 60)));
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function getRandomRarity() {
+            const roll = Math.random();
+            let cumulativeProbability = 0;
+            
+            for (const [rarity, config] of Object.entries(RARITIES)) {
+                cumulativeProbability += config.chance;
+                if (roll < cumulativeProbability) {
+                    return rarity;
+                }
+            }
+            
+            return 'common'; // Fallback
+        }
+        
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString();
+        }
+        
+        function getRarityColor(rarity) {
+            return RARITIES[rarity].class;
+        }
+        
+        function getEffectValue(effectType, rarity) {
+            const rarityMultiplier = RARITIES[rarity]?.effectMultiplier || 1;
+            
+            let value;
+            switch (effectType) {
+                // Facility effects
+                case "kp_bonus":
+                    return Math.round(randomInRange(5, 15) * rarityMultiplier);
+                case "rp_generation":
+                    return +(randomInRange(0.2, 0.8) * rarityMultiplier).toFixed(1);
+                case "qf_chance":
+                    return +(randomInRange(3, 8) * rarityMultiplier).toFixed(1);
+                case "facility_cost":
+                    return Math.round(randomInRange(5, 12) * rarityMultiplier);
+                case "research_cost":
+                    return Math.round(randomInRange(5, 12) * rarityMultiplier);
+                case "kp_per_completion":
+                    return Math.round(randomInRange(10, 30) * rarityMultiplier);
+                    
+                // Research effects
+                case "rp_bonus":
+                    return Math.round(randomInRange(10, 25) * rarityMultiplier);
+                case "kp_efficiency":
+                    return Math.round(randomInRange(10, 20) * rarityMultiplier);
+                case "qf_bonus":
+                    return Math.round(randomInRange(1, 3) * rarityMultiplier);
+                case "relic_time":
+                    return Math.round(randomInRange(5, 15) * rarityMultiplier);
+                case "auto_reading":
+                    return +(randomInRange(0.5, 1.5) * rarityMultiplier).toFixed(1);
+                case "facility_output":
+                    return Math.round(randomInRange(8, 15) * rarityMultiplier);
+                    
+                // Relic effects
+                case "kp_multiplier":
+                    return +(1 + randomInRange(0.1, 0.3) * rarityMultiplier).toFixed(2);
+                case "rp_multiplier":
+                    return +(1 + randomInRange(0.1, 0.3) * rarityMultiplier).toFixed(2);
+                case "qf_multiplier":
+                    return +(1 + randomInRange(0.1, 0.3) * rarityMultiplier).toFixed(2);
+                case "ep_multiplier":
+                    return +(1 + randomInRange(0.1, 0.3) * rarityMultiplier).toFixed(2);
+                case "all_resource_boost":
+                    return Math.round(randomInRange(5, 15) * rarityMultiplier);
+                case "prestige_bonus":
+                    return Math.round(randomInRange(10, 25) * rarityMultiplier);
+                    
+                default:
+                    return 1;
+            }
+        }
+        
+        function generateFacility() {
+            const rarity = getRandomRarity();
+            const name = generateProcedural(NAMES.facilities);
+            const effectType = randomElement(EFFECT_TYPES.facilities);
+            const effectValue = getEffectValue(effectType.type, rarity);
+            
+            const baseCost = Math.round(randomInRange(30, 80) * (1 + gameData.facilities.discovered.length * 0.1));
+            const upgradeBase = Math.round(baseCost * 0.6);
+            
+            return {
+                id: 'facility_' + Date.now(),
+                name: name,
+                rarity: rarity,
+                description: effectType.description.replace('{value}', effectValue),
+                cost: baseCost,
+                baseCost: baseCost,
+                upgradeBaseCost: upgradeBase,
+                level: 0,
+                maxLevel: rarity === 'common' ? 5 : 
+                          rarity === 'uncommon' ? 8 : 
+                          rarity === 'rare' ? 10 : 
+                          15, // Epic
+                effectType: effectType.type,
+                effectValue: effectValue,
+                locked: false,
+                getCost: function() { 
+                    return Math.floor(this.baseCost * Math.pow(1.5, this.level)); 
+                },
+                getUpgradeCost: function() { 
+                    return Math.floor(this.upgradeBaseCost * Math.pow(1.8, this.level)); 
+                },
+                getEffectAtLevel: function(level) { 
+                    return this.effectValue * (1 + 0.3 * level); 
+                }
+            };
+        }
+        
+        function generateResearch() {
+            const rarity = getRandomRarity();
+            const name = generateProcedural(NAMES.research);
+            const effectType = randomElement(EFFECT_TYPES.research);
+            const effectValue = getEffectValue(effectType.type, rarity);
+            
+            const baseCost = Math.round(randomInRange(20, 60) * (1 + gameData.research.discovered.length * 0.15));
+            const upgradeBase = Math.round(baseCost * 0.8);
+            
+            return {
+                id: 'research_' + Date.now(),
+                name: name,
+                rarity: rarity,
+                description: effectType.description.replace('{value}', effectValue),
+                cost: baseCost,
+                baseCost: baseCost,
+                upgradeBaseCost: upgradeBase,
+                level: 0,
+                maxLevel: rarity === 'common' ? 5 : 
+                          rarity === 'uncommon' ? 8 : 
+                          rarity === 'rare' ? 10 : 
+                          15, // Epic
+                effectType: effectType.type,
+                effectValue: effectValue,
+                locked: false,
+                getCost: function() { 
+                    return Math.floor(this.baseCost * Math.pow(1.5, this.level)); 
+                },
+                getUpgradeCost: function() { 
+                    return Math.floor(this.upgradeBaseCost * Math.pow(1.8, this.level)); 
+                },
+                getEffectAtLevel: function(level) { 
+                    return this.effectValue * (1 + 0.3 * level); 
+                }
+            };
+        }
+        
+        function generateRelic(rarity) {
+            // If rarity is not provided, generate one randomly
+            if (!rarity) {
+                rarity = getRandomRarity();
+            }
+            
+            const name = generateProcedural(NAMES.relics);
+            const effectType = randomElement(EFFECT_TYPES.relics);
+            const effectValue = getEffectValue(effectType.type, rarity);
+            
+            return {
+                id: 'relic_' + Date.now(),
+                name: name,
+                rarity: rarity,
+                description: effectType.description.replace('{value}', effectValue),
+                effectType: effectType.type,
+                effectValue: effectValue,
+                discoveryDate: Date.now()
+            };
+        }
+        
+        function applyResourceMultipliers() {
+            let rpGen = gameData.multipliers.rpGen;
+            
+            // Apply facility effects
+            for (const facility of gameData.facilities.owned) {
+                if (facility.effectType === "rp_generation") {
+                    rpGen += facility.getEffectAtLevel(facility.level);
+                }
+            }
+            
+            // Apply research effects
+            for (const research of gameData.research.owned) {
+                if (research.effectType === "rp_bonus") {
+                    rpGen *= (1 + research.getEffectAtLevel(research.level) / 100);
+                }
+            }
+            
+            // Apply relic effects
+            for (const relic of gameData.relics) {
+                if (relic.effectType === "rp_multiplier") {
+                    rpGen *= relic.effectValue;
+                }
+                else if (relic.effectType === "all_resource_boost") {
+                    rpGen *= (1 + relic.effectValue / 100);
+                }
+            }
+            
+            // Apply enlightenment upgrades
+            const fasterResearch = gameData.enlightenmentUpgrades.find(u => u.id === "faster-research");
+            if (fasterResearch) {
+                rpGen *= (1 + fasterResearch.getEffect());
+            }
+            
+            // Auto reading from research
+            let autoKP = 0;
+            for (const research of gameData.research.owned) {
+                if (research.effectType === "auto_reading") {
+                    autoKP += research.getEffectAtLevel(research.level);
+                }
+            }
+            
+            return {
+                rpGen: rpGen,
+                autoKP: autoKP
+            };
+        }
+        
+        function applyReadingMultipliers(baseKP) {
+            let kp = baseKP;
+            
+            // Apply facility effects
+            for (const facility of gameData.facilities.owned) {
+                if (facility.effectType === "kp_bonus") {
+                    kp *= (1 + facility.getEffectAtLevel(facility.level) / 100);
+                }
+            }
+            
+            // Apply research effects
+            for (const research of gameData.research.owned) {
+                if (research.effectType === "kp_efficiency") {
+                    kp *= (1 + research.getEffectAtLevel(research.level) / 100);
+                }
+            }
+            
+            // Apply relic effects
+            for (const relic of gameData.relics) {
+                if (relic.effectType === "kp_multiplier") {
+                    kp *= relic.effectValue;
+                }
+                else if (relic.effectType === "all_resource_boost") {
+                    kp *= (1 + relic.effectValue / 100);
+                }
+            }
+            
+            // Apply enlightenment upgrades
+            const kpEfficiency = gameData.enlightenmentUpgrades.find(u => u.id === "kp-efficiency");
+            if (kpEfficiency) {
+                kp *= (1 + kpEfficiency.getEffect());
+            }
+            
+            return Math.floor(kp);
+        }
+        
+        function calculateQFChance() {
+            let chance = gameData.multipliers.qfChance;
+            
+            // Apply facility effects
+            for (const facility of gameData.facilities.owned) {
+                if (facility.effectType === "qf_chance") {
+                    chance += facility.getEffectAtLevel(facility.level) / 100;
+                }
+            }
+            
+            // Apply enlightenment upgrades
+            const qfChance = gameData.enlightenmentUpgrades.find(u => u.id === "qf-chance");
+            if (qfChance) {
+                chance *= (1 + qfChance.getEffect());
+            }
+            
+            return chance;
+        }
+        
+        function calculateBookCompletion(book) {
+            let kp = 50; // Base KP for completing a book
+            
+            // Apply facility effects
+            for (const facility of gameData.facilities.owned) {
+                if (facility.effectType === "kp_per_completion") {
+                    kp += facility.getEffectAtLevel(facility.level);
+                }
+            }
+            
+            // Apply relic effects
+            for (const relic of gameData.relics) {
+                if (relic.effectType === "kp_multiplier") {
+                    kp *= relic.effectValue;
+                }
+                else if (relic.effectType === "all_resource_boost") {
+                    kp *= (1 + relic.effectValue / 100);
+                }
+            }
+            
+            return Math.floor(kp);
+        }
+        
+        function calculateRelicHuntTime(rarity) {
+            let time = RARITIES[rarity].huntTime;
+            
+            // Apply research effects
+            for (const research of gameData.research.owned) {
+                if (research.effectType === "relic_time") {
+                    time *= (1 - research.getEffectAtLevel(research.level) / 100);
+                }
+            }
+            
+            return Math.max(time, 60000); // Minimum 1 minute
+        }
+        
+        function calculatePotentialEP() {
+            const kpFactor = Math.log10(1 + gameData.resourcesGenerated.kp / 100) * 2;
+            const rpFactor = Math.log10(1 + gameData.resourcesGenerated.rp / 10) * 1.5;
+            const facilitiesFactor = gameData.facilities.owned.length * 0.5;
+            const researchFactor = gameData.research.owned.length * 0.7;
+            
+            let epGain = Math.floor(kpFactor + rpFactor + facilitiesFactor + researchFactor);
+            
+            // Apply relic effects
+            for (const relic of gameData.relics) {
+                if (relic.effectType === "ep_multiplier") {
+                    epGain *= relic.effectValue;
+                }
+                else if (relic.effectType === "prestige_bonus") {
+                    epGain *= (1 + relic.effectValue / 100);
+                }
+            }
+            
+            return Math.max(1, Math.floor(epGain));
+        }
+        
+        function calculateFacilityCost(baseCost) {
+            let cost = baseCost;
+            
+            // Apply facility effects
+            for (const facility of gameData.facilities.owned) {
+                if (facility.effectType === "facility_cost") {
+                    cost *= (1 - facility.getEffectAtLevel(facility.level) / 100);
+                }
+            }
+            
+            return Math.max(1, Math.floor(cost));
+        }
+        
+        function calculateResearchCost(baseCost) {
+            let cost = baseCost;
+            
+            // Apply facility effects
+            for (const facility of gameData.facilities.owned) {
+                if (facility.effectType === "research_cost") {
+                    cost *= (1 - facility.getEffectAtLevel(facility.level) / 100);
+                }
+            }
+            
+            return Math.max(1, Math.floor(cost));
+        }
+        
+        function calculateFacilityOutput(baseOutput, facility) {
+            let output = baseOutput;
+            
+            // Apply research effects
+            for (const research of gameData.research.owned) {
+                if (research.effectType === "facility_output") {
+                    output *= (1 + research.getEffectAtLevel(research.level) / 100);
+                }
+            }
+            
+            return output;
+        }
+        
+        function calculateQFGain(baseQF) {
+            let qf = baseQF;
+            
+            // Apply research effects
+            for (const research of gameData.research.owned) {
+                if (research.effectType === "qf_bonus") {
+                    qf += research.getEffectAtLevel(research.level);
+                }
+            }
+            
+            // Apply relic effects
+            for (const relic of gameData.relics) {
+                if (relic.effectType === "qf_multiplier") {
+                    qf *= relic.effectValue;
+                }
+                else if (relic.effectType === "all_resource_boost") {
+                    qf *= (1 + relic.effectValue / 100);
+                }
+            }
+            
+            return Math.floor(qf);
+        }
+        
+        // Game State Management
+        function saveGame() {
+            const saveData = JSON.stringify(gameData);
+            localStorage.setItem('cosmicReadingStation', saveData);
+            gameData.lastSave = Date.now();
+            
+            if (gameData.settings.showNotifications) {
+                showNotification("Game saved successfully!");
+            }
+        }
+        
+        function loadGame() {
+            const savedGame = localStorage.getItem('cosmicReadingStation');
+            
+            if (savedGame) {
+                try {
+                    const parsedData = JSON.parse(savedGame);
+                    
+                    // Function to recursively update objects and handle functions
+                    function updateObject(target, source) {
+                        for (const key in source) {
+                            if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key]) && !(source[key] instanceof Date)) {
+                                if (!target[key]) target[key] = {};
+                                updateObject(target[key], source[key]);
+                            } else {
+                                target[key] = source[key];
+                            }
+                        }
+                    }
+                    
+                    // Update gameData with saved values
+                    updateObject(gameData, parsedData);
+                    
+                    // Ensure functions are correctly restored
+                    gameData.enlightenmentUpgrades.forEach(upgrade => {
+                        upgrade.getEffect = function() { return this.baseEffect * this.level; };
+                        upgrade.getCost = function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); };
+                    });
+                    
+                    gameData.facilities.discovered.forEach(facility => {
+                        facility.getCost = function() { return Math.floor(this.baseCost * Math.pow(1.5, this.level)); };
+                        facility.getUpgradeCost = function() { return Math.floor(this.upgradeBaseCost * Math.pow(1.8, this.level)); };
+                        facility.getEffectAtLevel = function(level) { return this.effectValue * (1 + 0.3 * level); };
+                    });
+                    
+                    gameData.research.discovered.forEach(research => {
+                        research.getCost = function() { return Math.floor(this.baseCost * Math.pow(1.5, this.level)); };
+                        research.getUpgradeCost = function() { return Math.floor(this.upgradeBaseCost * Math.pow(1.8, this.level)); };
+                        research.getEffectAtLevel = function(level) { return this.effectValue * (1 + 0.3 * level); };
+                    });
+                    
+                    // Initialize RP progress if it doesn't exist in saved data
+                    if (!gameData.rpProgress) {
+                        gameData.rpProgress = {
+                            current: 0,
+                            threshold: 1
+                        };
+                    }
+                    
+                    // Update UI to reflect loaded data
+                    updateUI();
+                    
+                    // Process offline progress
+                    processOfflineProgress();
+                    
+                    // Resume relic hunt if in progress
+                    if (gameData.relicHunt) {
+                        updateRelicHuntDisplay();
+                    }
+                    
+                    showNotification("Game loaded successfully!");
+                } catch (error) {
+                    console.error("Error loading saved game:", error);
+                    showNotification("Error loading saved game!", "error");
+                }
+            }
+        }
+        
+        function exportGame() {
+            return btoa(JSON.stringify(gameData));
+        }
+        
+        function importGame(saveCode) {
+            try {
+                const decodedSave = atob(saveCode);
+                const parsedData = JSON.parse(decodedSave);
+                
+                // Basic validation
+                if (!parsedData.resources || !parsedData.books || !parsedData.facilities) {
+                    throw new Error("Invalid save data");
+                }
+                
+                // Create a backup of current game
+                const currentGame = JSON.stringify(gameData);
+                
+                // Function to recursively update objects and handle functions
+                function updateObject(target, source) {
+                    for (const key in source) {
+                        if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key]) && !(source[key] instanceof Date)) {
+                            if (!target[key]) target[key] = {};
+                            updateObject(target[key], source[key]);
+                        } else {
+                            target[key] = source[key];
+                        }
+                    }
+                }
+                
+                // Update gameData with imported values
+                updateObject(gameData, parsedData);
+                
+                // Ensure functions are correctly restored
+                gameData.enlightenmentUpgrades.forEach(upgrade => {
+                    upgrade.getEffect = function() { return this.baseEffect * this.level; };
+                    upgrade.getCost = function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); };
+                });
+                
+                gameData.facilities.discovered.forEach(facility => {
+                    facility.getCost = function() { return Math.floor(this.baseCost * Math.pow(1.5, this.level)); };
+                    facility.getUpgradeCost = function() { return Math.floor(this.upgradeBaseCost * Math.pow(1.8, this.level)); };
+                    facility.getEffectAtLevel = function(level) { return this.effectValue * (1 + 0.3 * level); };
+                });
+                
+                gameData.research.discovered.forEach(research => {
+                    research.getCost = function() { return Math.floor(this.baseCost * Math.pow(1.5, this.level)); };
+                    research.getUpgradeCost = function() { return Math.floor(this.upgradeBaseCost * Math.pow(1.8, this.level)); };
+                    research.getEffectAtLevel = function(level) { return this.effectValue * (1 + 0.3 * level); };
+                });
+                
+                // Initialize RP progress if it doesn't exist in saved data
+                if (!gameData.rpProgress) {
+                    gameData.rpProgress = {
+                        current: 0,
+                        threshold: 1
+                    };
+                }
+                
+                // Update UI to reflect imported data
+                updateUI();
+                
+                // Resume relic hunt if in progress
+                if (gameData.relicHunt) {
+                    updateRelicHuntDisplay();
+                }
+                
+                saveGame();
+                showNotification("Game imported successfully!");
+                return true;
+            } catch (error) {
+                console.error("Error importing game:", error);
+                showNotification("Error importing game! Invalid save code.", "error");
+                return false;
+            }
+        }
+        
+        function resetGame() {
+            // Store certain settings
+            const darkMode = gameData.settings.darkMode;
+            const textSize = gameData.settings.textSize;
+            const showNotifications = gameData.settings.showNotifications;
+            
+            // Reset game data
+            gameData = {
+                resources: {
+                    kp: 10,
+                    rp: 10,
+                    qf: 0,
+                    ep: 0
+                },
+                resourcesGenerated: {
+                    kp: 0,
+                    rp: 0,
+                    qf: 0,
+                    ep: 0
+                },
+                books: {
+                    current: [],
+                    completed: []
+                },
+                facilities: {
+                    discovered: [],
+                    owned: []
+                },
+                research: {
+                    discovered: [],
+                    owned: []
+                },
+                relics: [],
+                enlightenmentUpgrades: [
+                    {
+                        id: "faster-research",
+                        name: "Faster Research",
+                        description: "Increase base RP generation by 20% per level",
+                        baseEffect: 0.2,
+                        baseCost: 5,
+                        costScale: 1.5,
+                        maxLevel: 10,
+                        level: 0,
+                        getEffect: function() { return this.baseEffect * this.level; },
+                        getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                    },
+                    {
+                        id: "kp-efficiency",
+                        name: "Knowledge Efficiency",
+                        description: "Increase KP gained from reading by 15% per level",
+                        baseEffect: 0.15,
+                        baseCost: 4,
+                        costScale: 1.5,
+                        maxLevel: 10,
+                        level: 0,
+                        getEffect: function() { return this.baseEffect * this.level; },
+                        getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                    },
+                    {
+                        id: "qf-chance",
+                        name: "Quantum Perception",
+                        description: "Increase chance of finding QF when reading by 10% per level",
+                        baseEffect: 0.1,
+                        baseCost: 6,
+                        costScale: 1.7,
+                        maxLevel: 8,
+                        level: 0,
+                        getEffect: function() { return this.baseEffect * this.level; },
+                        getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                    },
+                    {
+                        id: "qf-retention",
+                        name: "Quantum Memory",
+                        description: "Increase QF retained after enlightenment by 10% per level (base: 50%)",
+                        baseEffect: 0.1,
+                        baseCost: 8,
+                        costScale: 1.6,
+                        maxLevel: 5,
+                        level: 0,
+                        getEffect: function() { return 0.5 + (this.baseEffect * this.level); },
+                        getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                    },
+                    {
+                        id: "facility-retention",
+                        name: "Facility Preservation",
+                        description: "Retain 1 facility after enlightenment per level",
+                        baseEffect: 1,
+                        baseCost: 10,
+                        costScale: 2,
+                        maxLevel: 5,
+                        level: 0,
+                        getEffect: function() { return this.baseEffect * this.level; },
+                        getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                    },
+                    {
+                        id: "research-retention",
+                        name: "Research Archive",
+                        description: "Retain 1 research after enlightenment per level",
+                        baseEffect: 1,
+                        baseCost: 12,
+                        costScale: 2,
+                        maxLevel: 5,
+                        level: 0,
+                        getEffect: function() { return this.baseEffect * this.level; },
+                        getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                    },
+                    {
+                        id: "offline-time",
+                        name: "Time Dilation",
+                        description: "Increase maximum offline progress time by 4 hours per level (base: 4 hours)",
+                        baseEffect: 4,
+                        baseCost: 15,
+                        costScale: 1.8,
+                        maxLevel: 5,
+                        level: 0,
+                        getEffect: function() { return 4 + (this.baseEffect * this.level); },
+                        getCost: function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); }
+                    }
+                ],
+                stats: {
+                    allTime: {
+                        booksCompleted: 0,
+                        mostBooksInOneRun: 0,
+                        pagesRead: 0,
+                        mostPagesInOneRun: 0,
+                        mostPagesInOneDay: 0,
+                        kpGenerated: 0,
+                        rpGenerated: 0,
+                        qfGained: 0,
+                        epEarned: 0,
+                        prestigeCount: 0,
+                        relicsFound: 0
+                    },
+                    currentRun: {
+                        booksCompleted: 0,
+                        pagesRead: 0,
+                        mostPagesInOneDay: 0,
+                        kpGenerated: 0,
+                        rpGenerated: 0,
+                        qfGained: 0,
+                        dailyPages: {}
+                    }
+                },
+                settings: {
+                    darkMode: darkMode,
+                    textSize: textSize,
+                    showNotifications: showNotifications,
+                    autoSave: true
+                },
+                lastSave: Date.now(),
+                lastActivity: Date.now(),
+                relicHunt: null,
+                discoveryData: {
+                    facilityDiscoveryCost: { kp: 50, rp: 10 },
+                    researchDiscoveryCost: { rp: 30 },
+                    relicHuntCost: 50,
+                    relicHuntIncrease: 5
+                },
+                multipliers: {
+                    rpGen: 0.5, // Base RP generation per minute
+                    qfChance: 0.05 // Base chance to get QF when reading (5%)
+                },
+                rpProgress: {
+                    current: 0,
+                    threshold: 1
+                }
+            };
+            
+            // Update UI
+            updateUI();
+            
+            // Save the reset game
+            saveGame();
+            
+            showNotification("Game has been reset!");
+        }
+        
+        function processOfflineProgress() {
+            const now = Date.now();
+            const lastActivityTime = gameData.lastActivity;
+            const timeDiff = now - lastActivityTime;
+            
+            if (timeDiff < 5000) { // Less than 5 seconds, not considered offline
+                return;
+            }
+            
+            // Determine maximum offline time
+            const offlineTimeLimitHours = 4; // Base limit
+            
+            // Apply enlightenment upgrade if available
+            let maxOfflineTime = offlineTimeLimitHours * 60 * 60 * 1000; // Convert to milliseconds
+            const offlineUpgrade = gameData.enlightenmentUpgrades.find(u => u.id === "offline-time");
+            if (offlineUpgrade && offlineUpgrade.level > 0) {
+                maxOfflineTime = offlineUpgrade.getEffect() * 60 * 60 * 1000;
+            }
+            
+            // Cap offline time
+            const offlineTime = Math.min(timeDiff, maxOfflineTime);
+            
+            // Calculate resource gains
+            const multipliers = applyResourceMultipliers();
+            const rpGain = (multipliers.rpGen / 60) * (offlineTime / 1000);
+            const autoKpGain = (multipliers.autoKP / 60) * (offlineTime / 1000);
+            
+            // Apply gains
+            gameData.resources.rp += rpGain;
+            gameData.resourcesGenerated.rp += rpGain;
+            gameData.stats.currentRun.rpGenerated += rpGain;
+            gameData.stats.allTime.rpGenerated += rpGain;
+            
+            if (autoKpGain > 0) {
+                gameData.resources.kp += autoKpGain;
+                gameData.resourcesGenerated.kp += autoKpGain;
+                gameData.stats.currentRun.kpGenerated += autoKpGain;
+                gameData.stats.allTime.kpGenerated += autoKpGain;
+            }
+            
+            // Handle relic hunt if active
+            if (gameData.relicHunt) {
+                const relicHunt = gameData.relicHunt;
+                const newEndTime = Math.min(relicHunt.endTime, now);
+                
+                if (now >= relicHunt.endTime) {
+                    // Relic hunt completed while offline
+                    completeRelicHunt();
+                }
+                // If not completed, the hunt will continue and be updated in the UI
+            }
+            
+            // Update last activity time
+            gameData.lastActivity = now;
+            
+            // Show notification
+            const minutes = Math.floor(offlineTime / (1000 * 60));
+            const hours = Math.floor(minutes / 60);
+            const remainingMinutes = minutes % 60;
+            
+            let timeText = "";
+            if (hours > 0) {
+                timeText = `${hours} hour${hours > 1 ? 's' : ''}`;
+                if (remainingMinutes > 0) {
+                    timeText += ` and ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`;
+                }
+            } else {
+                timeText = `${minutes} minute${minutes > 1 ? 's' : ''}`;
+            }
+            
+            const rpText = formatNumber(rpGain);
+            const kpText = autoKpGain > 0 ? ` and ${formatNumber(autoKpGain)} KP` : '';
+            
+            showNotification(`Welcome back! You were gone for ${timeText} and gained ${rpText} RP${kpText}.`);
+        }
+        
+        function performEnlightenment() {
+            // Calculate EP gain
+            const epGain = calculatePotentialEP();
+            
+            // Store data before reset
+            const completedBooks = gameData.stats.currentRun.booksCompleted;
+            const pagesRead = gameData.stats.currentRun.pagesRead;
+            const kpGenerated = gameData.stats.currentRun.kpGenerated;
+            const rpGenerated = gameData.stats.currentRun.rpGenerated;
+            const qfGained = gameData.stats.currentRun.qfGained;
+            
+            // Update all-time stats
+            gameData.stats.allTime.prestigeCount++;
+            gameData.stats.allTime.epEarned += epGain;
+            
+            if (completedBooks > gameData.stats.allTime.mostBooksInOneRun) {
+                gameData.stats.allTime.mostBooksInOneRun = completedBooks;
+            }
+            
+            if (pagesRead > gameData.stats.allTime.mostPagesInOneRun) {
+                gameData.stats.allTime.mostPagesInOneRun = pagesRead;
+            }
+            
+            // Calculate QF retention
+            const qfRetention = gameData.enlightenmentUpgrades.find(u => u.id === "qf-retention");
+            const qfRetentionRate = qfRetention ? qfRetention.getEffect() : 0.5; // Default 50%
+            const qfRetained = Math.floor(gameData.resources.qf * qfRetentionRate);
+            
+            // Determine facilities to retain
+            const facilityRetention = gameData.enlightenmentUpgrades.find(u => u.id === "facility-retention");
+            const facilitiesToRetain = facilityRetention ? facilityRetention.getEffect() : 0;
+            
+            let retainedFacilities = [];
+            if (facilitiesToRetain > 0 && gameData.facilities.owned.length > 0) {
+                // Sort facilities by level and rarity
+                const sortedFacilities = [...gameData.facilities.owned].sort((a, b) => {
+                    const rarityValue = {
+                        "common": 1,
+                        "uncommon": 2,
+                        "rare": 3,
+                        "epic": 4
+                    };
+                    
+                    // First by level, then by rarity
+                    if (b.level !== a.level) {
+                        return b.level - a.level;
+                    } else {
+                        return rarityValue[b.rarity] - rarityValue[a.rarity];
+                    }
+                });
+                
+                retainedFacilities = sortedFacilities.slice(0, facilitiesToRetain);
+            }
+            
+            // Determine researches to retain
+            const researchRetention = gameData.enlightenmentUpgrades.find(u => u.id === "research-retention");
+            const researchesToRetain = researchRetention ? researchRetention.getEffect() : 0;
+            
+            let retainedResearches = [];
+            if (researchesToRetain > 0 && gameData.research.owned.length > 0) {
+                // Sort researches by level and rarity
+                const sortedResearches = [...gameData.research.owned].sort((a, b) => {
+                    const rarityValue = {
+                        "common": 1,
+                        "uncommon": 2,
+                        "rare": 3,
+                        "epic": 4
+                    };
+                    
+                    // First by level, then by rarity
+                    if (b.level !== a.level) {
+                        return b.level - a.level;
+                    } else {
+                        return rarityValue[b.rarity] - rarityValue[a.rarity];
+                    }
+                });
+                
+                retainedResearches = sortedResearches.slice(0, researchesToRetain);
+            }
+            
+            // Store relics and enlightenment upgrades
+            const relics = [...gameData.relics];
+            const enlightenmentUpgrades = JSON.parse(JSON.stringify(gameData.enlightenmentUpgrades));
+            
+            // Reset appropriate data
+            gameData.resources.kp = 0;
+            gameData.resources.rp = 0;
+            gameData.resources.qf = qfRetained;
+            gameData.resources.ep += epGain;
+            
+            gameData.resourcesGenerated = {
+                kp: 0,
+                rp: 0,
+                qf: 0,
+                ep: epGain
+            };
+            
+            gameData.books = {
+                current: [],
+                completed: []
+            };
+            
+            gameData.facilities = {
+                discovered: [],
+                owned: []
+            };
+            
+            gameData.research = {
+                discovered: [],
+                owned: []
+            };
+            
+            gameData.stats.currentRun = {
+                booksCompleted: 0,
+                pagesRead: 0,
+                mostPagesInOneDay: 0,
+                kpGenerated: 0,
+                rpGenerated: 0,
+                qfGained: 0,
+                dailyPages: {}
+            };
+            
+            gameData.relicHunt = null;
+            
+            gameData.discoveryData = {
+                facilityDiscoveryCost: { kp: 50, rp: 10 },
+                researchDiscoveryCost: { rp: 30 },
+                relicHuntCost: 50,
+                relicHuntIncrease: 5
+            };
+            
+            // Reset RP progress
+            gameData.rpProgress = {
+                current: 0,
+                threshold: 1
+            };
+            
+            // Restore relics and enlightenment upgrades
+            gameData.relics = relics;
+            gameData.enlightenmentUpgrades = enlightenmentUpgrades;
+            
+            // Restore retained facilities and researches
+            for (const facility of retainedFacilities) {
+                gameData.facilities.discovered.push(facility);
+                gameData.facilities.owned.push(facility);
+            }
+            
+            for (const research of retainedResearches) {
+                gameData.research.discovered.push(research);
+                gameData.research.owned.push(research);
+            }
+            
+            // Restore functions for enlightenment upgrades
+            gameData.enlightenmentUpgrades.forEach(upgrade => {
+                upgrade.getEffect = function() { return this.baseEffect * this.level; };
+                upgrade.getCost = function() { return Math.floor(this.baseCost * Math.pow(this.costScale, this.level)); };
+            });
+            
+            // Restore functions for facilities and researches
+            gameData.facilities.discovered.forEach(facility => {
+                facility.getCost = function() { return Math.floor(this.baseCost * Math.pow(1.5, this.level)); };
+                facility.getUpgradeCost = function() { return Math.floor(this.upgradeBaseCost * Math.pow(1.8, this.level)); };
+                facility.getEffectAtLevel = function(level) { return this.effectValue * (1 + 0.3 * level); };
+            });
+            
+            gameData.research.discovered.forEach(research => {
+                research.getCost = function() { return Math.floor(this.baseCost * Math.pow(1.5, this.level)); };
+                research.getUpgradeCost = function() { return Math.floor(this.upgradeBaseCost * Math.pow(1.8, this.level)); };
+                research.getEffectAtLevel = function(level) { return this.effectValue * (1 + 0.3 * level); };
+            });
+            
+            // Update UI
+            updateUI();
+            
+            // Save the game
+            saveGame();
+            
+            // Show notification
+            showNotification(`Enlightenment complete! You gained ${epGain} Enlightenment Points.`);
+        }
+        
+        function startRelicHunt() {
+            if (gameData.resources.qf < gameData.discoveryData.relicHuntCost) {
+                showNotification("Not enough Quantum Fragments to start the hunt!", "error");
+                return;
+            }
+            
+            // Determine relic rarity
+            const rarity = getRandomRarity();
+            
+            // Calculate hunt duration
+            const duration = calculateRelicHuntTime(rarity);
+            
+            // Start the hunt
+            gameData.resources.qf -= gameData.discoveryData.relicHuntCost;
+            gameData.relicHunt = {
+                startTime: Date.now(),
+                endTime: Date.now() + duration,
+                rarity: rarity
+            };
+            
+            // Increase cost for next hunt
+            gameData.discoveryData.relicHuntCost += gameData.discoveryData.relicHuntIncrease;
+            
+            // Update UI
+            updateRelicHuntDisplay();
+            
+            // Save game
+            saveGame();
+            
+            // Show notification
+            showNotification("Relic hunt started! Check back later to see what you find.");
+        }
+        
+        function cancelRelicHunt() {
+            if (!gameData.relicHunt) return;
+            
+            // Refund half the cost
+            const refund = Math.floor(gameData.discoveryData.relicHuntCost / 2);
+            gameData.resources.qf += refund;
+            
+            // Reset hunt
+            gameData.relicHunt = null;
+            
+            // Update UI
+            updateRelicHuntDisplay();
+            
+            // Show notification
+            showNotification(`Relic hunt canceled. ${refund} QF refunded.`);
+            
+            // Save game
+            saveGame();
+        }
+        
+        function completeRelicHunt() {
+            if (!gameData.relicHunt) return;
+            
+            // Generate a relic based on the hunt's rarity
+            const newRelic = generateRelic(gameData.relicHunt.rarity);
+            
+            // Add relic to collection
+            gameData.relics.push(newRelic);
+            
+            // Update stats
+            gameData.stats.allTime.relicsFound++;
+            
+            // Reset hunt
+            gameData.relicHunt = null;
+            
+            // Update UI
+            updateRelicHuntDisplay();
+            updateRelicsList();
+            
+            // Show notification
+            showNotification(`New relic discovered: ${newRelic.name}!`, "success");
+            
+            // Save game
+            saveGame();
+        }
+        
+        // UI Functions
+        function updateResourceDisplay() {
+            document.getElementById('kp-display').textContent = formatNumber(gameData.resources.kp);
+            document.getElementById('rp-display').textContent = formatNumber(gameData.resources.rp);
+            document.getElementById('qf-display').textContent = formatNumber(gameData.resources.qf);
+            document.getElementById('ep-display').textContent = formatNumber(gameData.resources.ep);
+        }
+
+        function updateRPProgressDisplay() {
+            const rpGen = applyResourceMultipliers().rpGen;
+            document.getElementById('rp-generation-rate').textContent = `${rpGen.toFixed(1)} RP/min`;
+            
+            const progressPercent = Math.min(100, (gameData.rpProgress.current / gameData.rpProgress.threshold) * 100);
+            document.getElementById('rp-progress-bar').style.width = `${progressPercent}%`;
+            document.getElementById('rp-progress-percent').textContent = `${Math.floor(progressPercent)}%`;
+        }
+        
+        function updateBookLists() {
+            const currentBooksContainer = document.getElementById('current-books-list');
+            const completedBooksContainer = document.getElementById('completed-books-list');
+            
+            // Clear containers
+            currentBooksContainer.innerHTML = '';
+            completedBooksContainer.innerHTML = '';
+            
+            // Add current books
+            if (gameData.books.current.length > 0) {
+                gameData.books.current.forEach(book => {
+                    const bookElement = document.createElement('div');
+                    bookElement.className = 'p-3 rounded-lg bg-opacity-10 bg-primary';
+                    bookElement.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold">${book.title}</h3>
+                            <span class="px-2 py-1 text-xs rounded-full bg-opacity-20 bg-primary">${book.genre}</span>
+                        </div>
+                        <div class="mb-2">
+                            <div class="flex justify-between mb-1">
+                                <span>Pages read:</span>
+                                <span>${book.pagesRead}</span>
+                            </div>
+                            <div class="flex justify-between mb-1">
+                                <span>Last read:</span>
+                                <span>${formatDate(book.lastRead)}</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <button class="log-more-btn px-3 py-1 text-sm rounded btn-secondary" data-book-id="${book.id}">
+                                <i class="fas fa-plus mr-1"></i> Log More
+                            </button>
+                            <button class="complete-book-btn px-3 py-1 text-sm rounded btn-primary" data-book-id="${book.id}">
+                                <i class="fas fa-check mr-1"></i> Complete
+                            </button>
+                        </div>
+                    `;
+                    currentBooksContainer.appendChild(bookElement);
+                });
+                
+                // Add event listeners for buttons
+                document.querySelectorAll('.log-more-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const bookId = this.getAttribute('data-book-id');
+                        const book = gameData.books.current.find(b => b.id === bookId);
+                        
+                        if (book) {
+                            // Pre-fill form
+                            document.getElementById('book-title').value = book.title;
+                            document.getElementById('book-genre').value = book.genre === 'Custom' ? 'Custom' : book.genre;
+                            document.getElementById('pages-read').value = '';
+                            document.getElementById('book-completed').checked = false;
+                            
+                            // Show custom genre input if needed
+                            if (book.genre === 'Custom') {
+                                document.getElementById('custom-genre-container').classList.remove('hidden');
+                                document.getElementById('custom-genre').value = book.customGenre || '';
+                            } else {
+                                document.getElementById('custom-genre-container').classList.add('hidden');
+                            }
+                            
+                            // Focus on pages input
+                            document.getElementById('pages-read').focus();
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.complete-book-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const bookId = this.getAttribute('data-book-id');
+                        const book = gameData.books.current.find(b => b.id === bookId);
+                        
+                        if (book) {
+                            completeBook(book);
+                            updateBookLists();
+                        }
+                    });
+                });
+            } else {
+                currentBooksContainer.innerHTML = `
+                    <div class="text-center py-6 opacity-50">
+                        No books added yet. Start by logging your reading!
+                    </div>
+                `;
+            }
+            
+            // Add completed books
+            if (gameData.books.completed.length > 0) {
+                gameData.books.completed.forEach(book => {
+                    const bookElement = document.createElement('div');
+                    bookElement.className = 'p-3 rounded-lg bg-opacity-10 bg-success';
+                    bookElement.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold">${book.title}</h3>
+                            <span class="px-2 py-1 text-xs rounded-full bg-opacity-20 bg-success">${book.genre}</span>
+                        </div>
+                        <div class="mb-2">
+                            <div class="flex justify-between mb-1">
+                                <span>Total pages:</span>
+                                <span>${book.pagesRead}</span>
+                            </div>
+                            <div class="flex justify-between mb-1">
+                                <span>Completed on:</span>
+                                <span>${formatDate(book.completedDate)}</span>
+                            </div>
+                        </div>
+                    `;
+                    completedBooksContainer.appendChild(bookElement);
+                });
+            } else {
+                completedBooksContainer.innerHTML = `
+                    <div class="text-center py-6 opacity-50">
+                        No completed books yet. Keep reading!
+                    </div>
+                `;
+            }
+        }
+        
+        function updateFacilitiesList() {
+            const ownedFacilitiesContainer = document.getElementById('owned-facilities-list');
+            const discoveredFacilitiesContainer = document.getElementById('discovered-facilities-list');
+            
+            // Clear containers
+            ownedFacilitiesContainer.innerHTML = '';
+            discoveredFacilitiesContainer.innerHTML = '';
+            
+            // Update discovery cost display
+            document.getElementById('facility-discovery-cost').textContent = 
+                `${formatNumber(gameData.discoveryData.facilityDiscoveryCost.kp)} KP, ${formatNumber(gameData.discoveryData.facilityDiscoveryCost.rp)} RP`;
+            
+            // Add owned facilities
+            if (gameData.facilities.owned.length > 0) {
+                gameData.facilities.owned.forEach(facility => {
+                    const facilityElement = document.createElement('div');
+                    facilityElement.className = 'p-3 rounded-lg bg-opacity-10 bg-primary';
+                    
+                    // Calculate the effect at current level
+                    const currentEffect = facility.getEffectAtLevel(facility.level);
+                    const nextEffect = facility.level < facility.maxLevel ? facility.getEffectAtLevel(facility.level + 1) : null;
+                    
+                    facilityElement.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold">${facility.name}</h3>
+                                <span class="px-2 py-1 text-xs rounded-full bg-opacity-20 bg-primary ${getRarityColor(facility.rarity)}">
+                                    ${RARITIES[facility.rarity].label}
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                <p class="text-sm">${facility.description.replace('{value}', currentEffect.toFixed(1))}</p>
+                                <div class="flex justify-between mt-2">
+                                    <span class="text-sm">Level ${facility.level}/${facility.maxLevel}</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-end">
+                                ${facility.level < facility.maxLevel ? 
+                                    `<button class="upgrade-facility-btn px-3 py-1 text-sm rounded btn-primary" data-facility-id="${facility.id}">
+                                        <i class="fas fa-arrow-up mr-1"></i> Upgrade (${formatNumber(facility.getUpgradeCost())} KP)
+                                    </button>` : 
+                                    `<span class="px-3 py-1 text-sm rounded bg-opacity-20 bg-success">Maximum Level</span>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                    ownedFacilitiesContainer.appendChild(facilityElement);
+                });
+                
+                // Add event listeners for buttons
+                document.querySelectorAll('.upgrade-facility-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const facilityId = this.getAttribute('data-facility-id');
+                        const facility = gameData.facilities.owned.find(f => f.id === facilityId);
+                        
+                        if (facility && facility.level < facility.maxLevel) {
+                            const upgradeCost = facility.getUpgradeCost();
+                            
+                            if (gameData.resources.kp >= upgradeCost) {
+                                gameData.resources.kp -= upgradeCost;
+                                facility.level++;
+                                
+                                showNotification(`${facility.name} upgraded to level ${facility.level}!`);
+                                updateFacilitiesList();
+                                updateResourceDisplay();
+                                saveGame();
+                            } else {
+                                showNotification("Not enough Knowledge Points!", "error");
+                            }
+                        }
+                    });
+                });
+            } else {
+                ownedFacilitiesContainer.innerHTML = `
+                    <div class="text-center py-6 opacity-50">
+                        No facilities yet. Discover your first facility!
+                    </div>
+                `;
+            }
+            
+            // Add discovered but not owned facilities
+            const discoveredNotOwned = gameData.facilities.discovered.filter(
+                facility => !gameData.facilities.owned.some(owned => owned.id === facility.id)
+            );
+            
+            if (discoveredNotOwned.length > 0) {
+                discoveredNotOwned.forEach(facility => {
+                    const facilityElement = document.createElement('div');
+                    facilityElement.className = 'p-3 rounded-lg bg-opacity-10 bg-primary';
+                    
+                    facilityElement.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold">${facility.name}</h3>
+                                <span class="px-2 py-1 text-xs rounded-full bg-opacity-20 bg-primary ${getRarityColor(facility.rarity)}">
+                                    ${RARITIES[facility.rarity].label}
+                                </span>
+                            </div>
+                            <p class="text-sm mb-3">${facility.description.replace('{value}', facility.effectValue.toFixed(1))}</p>
+                            <div class="flex justify-end">
+                                <button class="build-facility-btn px-3 py-1 text-sm rounded btn-primary" data-facility-id="${facility.id}">
+                                    <i class="fas fa-hammer mr-1"></i> Build (${formatNumber(facility.getCost())} KP)
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    discoveredFacilitiesContainer.appendChild(facilityElement);
+                });
+                
+                // Add event listeners for buttons
+                document.querySelectorAll('.build-facility-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const facilityId = this.getAttribute('data-facility-id');
+                        const facility = gameData.facilities.discovered.find(f => f.id === facilityId);
+                        
+                        if (facility) {
+                            const buildCost = facility.getCost();
+                            
+                            if (gameData.resources.kp >= buildCost) {
+                                gameData.resources.kp -= buildCost;
+                                facility.level = 1;
+                                gameData.facilities.owned.push(facility);
+                                
+                                showNotification(`${facility.name} built successfully!`);
+                                updateFacilitiesList();
+                                updateResourceDisplay();
+                                updateEnlightenmentRequirements();
+                                saveGame();
+                            } else {
+                                showNotification("Not enough Knowledge Points!", "error");
+                            }
+                        }
+                    });
+                });
+            } else if (gameData.facilities.discovered.length === 0) {
+                discoveredFacilitiesContainer.innerHTML = `
+                    <div class="text-center py-6 opacity-50 col-span-2">
+                        No facilities discovered yet. Use the Discovery button to find new facilities!
+                    </div>
+                `;
+            }
+        }
+        
+        function updateResearchList() {
+            const ownedResearchContainer = document.getElementById('owned-research-list');
+            const discoveredResearchContainer = document.getElementById('discovered-research-list');
+            
+            // Clear containers
+            ownedResearchContainer.innerHTML = '';
+            discoveredResearchContainer.innerHTML = '';
+            
+            // Update discovery cost display
+            document.getElementById('research-discovery-cost').textContent = 
+                `${formatNumber(gameData.discoveryData.researchDiscoveryCost.rp)} RP`;
+            
+            // Add owned research
+            if (gameData.research.owned.length > 0) {
+                gameData.research.owned.forEach(research => {
+                    const researchElement = document.createElement('div');
+                    researchElement.className = 'p-3 rounded-lg bg-opacity-10 bg-primary';
+                    
+                    // Calculate the effect at current level
+                    const currentEffect = research.getEffectAtLevel(research.level);
+                    const nextEffect = research.level < research.maxLevel ? research.getEffectAtLevel(research.level + 1) : null;
+                    
+                    researchElement.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold">${research.name}</h3>
+                                <span class="px-2 py-1 text-xs rounded-full bg-opacity-20 bg-primary ${getRarityColor(research.rarity)}">
+                                    ${RARITIES[research.rarity].label}
+                                </span>
+                            </div>
+                            <div class="mb-3">
+                                <p class="text-sm">${research.description.replace('{value}', currentEffect.toFixed(1))}</p>
+                                <div class="flex justify-between mt-2">
+                                    <span class="text-sm">Level ${research.level}/${research.maxLevel}</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-end">
+                                ${research.level < research.maxLevel ? 
+                                    `<button class="upgrade-research-btn px-3 py-1 text-sm rounded btn-primary" data-research-id="${research.id}">
+                                        <i class="fas fa-arrow-up mr-1"></i> Upgrade (${formatNumber(research.getUpgradeCost())} RP)
+                                    </button>` : 
+                                    `<span class="px-3 py-1 text-sm rounded bg-opacity-20 bg-success">Maximum Level</span>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                    ownedResearchContainer.appendChild(researchElement);
+                });
+                
+                // Add event listeners for buttons
+                document.querySelectorAll('.upgrade-research-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const researchId = this.getAttribute('data-research-id');
+                        const research = gameData.research.owned.find(r => r.id === researchId);
+                        
+                        if (research && research.level < research.maxLevel) {
+                            const upgradeCost = research.getUpgradeCost();
+                            
+                            if (gameData.resources.rp >= upgradeCost) {
+                                gameData.resources.rp -= upgradeCost;
+                                research.level++;
+                                
+                                showNotification(`${research.name} upgraded to level ${research.level}!`);
+                                updateResearchList();
+                                updateResourceDisplay();
+                                saveGame();
+                            } else {
+                                showNotification("Not enough Research Points!", "error");
+                            }
+                        }
+                    });
+                });
+            } else {
+                ownedResearchContainer.innerHTML = `
+                    <div class="text-center py-6 opacity-50">
+                        No research projects yet. Discover your first research!
+                    </div>
+                `;
+            }
+            
+            // Add discovered but not owned research
+            const discoveredNotOwned = gameData.research.discovered.filter(
+                research => !gameData.research.owned.some(owned => owned.id === research.id)
+            );
+            
+            if (discoveredNotOwned.length > 0) {
+                discoveredNotOwned.forEach(research => {
+                    const researchElement = document.createElement('div');
+                    researchElement.className = 'p-3 rounded-lg bg-opacity-10 bg-primary';
+                    
+                    researchElement.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold">${research.name}</h3>
+                                <span class="px-2 py-1 text-xs rounded-full bg-opacity-20 bg-primary ${getRarityColor(research.rarity)}">
+                                    ${RARITIES[research.rarity].label}
+                                </span>
+                            </div>
+                            <p class="text-sm mb-3">${research.description.replace('{value}', research.effectValue.toFixed(1))}</p>
+                            <div class="flex justify-end">
+                                <button class="research-project-btn px-3 py-1 text-sm rounded btn-primary" data-research-id="${research.id}">
+                                    <i class="fas fa-flask mr-1"></i> Research (${formatNumber(research.getCost())} RP)
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    discoveredResearchContainer.appendChild(researchElement);
+                });
+                
+                // Add event listeners for buttons
+                document.querySelectorAll('.research-project-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const researchId = this.getAttribute('data-research-id');
+                        const research = gameData.research.discovered.find(r => r.id === researchId);
+                        
+                        if (research) {
+                            const researchCost = research.getCost();
+                            
+                            if (gameData.resources.rp >= researchCost) {
+                                gameData.resources.rp -= researchCost;
+                                research.level = 1;
+                                gameData.research.owned.push(research);
+                                
+                                showNotification(`${research.name} researched successfully!`);
+                                updateResearchList();
+                                updateResourceDisplay();
+                                updateEnlightenmentRequirements();
+                                saveGame();
+                            } else {
+                                showNotification("Not enough Research Points!", "error");
+                            }
+                        }
+                    });
+                });
+            } else if (gameData.research.discovered.length === 0) {
+                discoveredResearchContainer.innerHTML = `
+                    <div class="text-center py-6 opacity-50 col-span-2">
+                        No research discovered yet. Use the Discovery button to find new research!
+                    </div>
+                `;
+            }
+        }
+        
+        function updateRelicsList() {
+            const relicsContainer = document.getElementById('relics-list');
+            
+            // Clear container
+            relicsContainer.innerHTML = '';
+            
+            // Add relics
+            if (gameData.relics.length > 0) {
+                gameData.relics.forEach(relic => {
+                    const relicElement = document.createElement('div');
+                    relicElement.className = 'p-3 rounded-lg bg-opacity-10 bg-primary relic-glow';
+                    
+                    relicElement.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="font-bold">${relic.name}</h3>
+                                <span class="px-2 py-1 text-xs rounded-full bg-opacity-20 bg-primary ${getRarityColor(relic.rarity)}">
+                                    ${RARITIES[relic.rarity].label}
+                                </span>
+                            </div>
+                            <p class="text-sm mb-3">${relic.description}</p>
+                            <div class="flex justify-between text-xs opacity-70">
+                                <span>Discovered on ${formatDate(relic.discoveryDate)}</span>
+                            </div>
+                        </div>
+                    `;
+                    relicsContainer.appendChild(relicElement);
+                });
+            } else {
+                relicsContainer.innerHTML = `
+                    <div class="text-center py-6 opacity-50 col-span-2">
+                        No relics found yet. Hunt for your first relic!
+                    </div>
+                `;
+            }
+            
+            // Update relic hunt cost display
+            document.getElementById('relic-hunt-cost').textContent = `${formatNumber(gameData.discoveryData.relicHuntCost)} QF`;
+        }
+        
+        function updateRelicHuntDisplay() {
+            const huntContainer = document.getElementById('relic-hunt-container');
+            const huntingContainer = document.getElementById('relic-hunting-container');
+            
+            if (gameData.relicHunt) {
+                // Hide hunt button, show progress
+                huntContainer.classList.add('hidden');
+                huntingContainer.classList.remove('hidden');
+                
+                // Calculate progress
+                const now = Date.now();
+                const startTime = gameData.relicHunt.startTime;
+                const endTime = gameData.relicHunt.endTime;
+                const totalDuration = endTime - startTime;
+                const elapsed = now - startTime;
+                
+                if (now >= endTime) {
+                    // Hunt is complete
+                    completeRelicHunt();
+                    return;
+                }
+                
+                const progressPercent = Math.min(100, Math.floor((elapsed / totalDuration) * 100));
+                const timeRemaining = endTime - now;
+                
+                // Update progress display
+                document.getElementById('relic-hunt-progress').textContent = `${progressPercent}%`;
+                document.getElementById('relic-hunt-progress-bar').style.width = `${progressPercent}%`;
+                document.getElementById('relic-hunt-time-remaining').textContent = formatTime(timeRemaining);
+                
+                // Schedule next update
+                setTimeout(updateRelicHuntDisplay, 1000);
+            } else {
+                // Show hunt button, hide progress
+                huntContainer.classList.remove('hidden');
+                huntingContainer.classList.add('hidden');
+            }
+        }
+        
+        function updateEnlightenmentUpgrades() {
+            const upgradesContainer = document.getElementById('enlightenment-upgrades-list');
+            
+            // Clear container
+            upgradesContainer.innerHTML = '';
+            
+            // Add upgrades
+            gameData.enlightenmentUpgrades.forEach(upgrade => {
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = 'p-3 rounded-lg bg-opacity-10 bg-primary';
+                
+                const isMaxLevel = upgrade.level >= upgrade.maxLevel;
+                const canAfford = gameData.resources.ep >= upgrade.getCost();
+                
+                upgradeElement.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold">${upgrade.name}</h3>
+                            <span class="px-2 py-1 text-xs rounded-full bg-opacity-20 bg-primary">
+                                Level ${upgrade.level}/${upgrade.maxLevel}
+                            </span>
+                        </div>
+                        <p class="text-sm mb-3">${upgrade.description}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm">Current: ${(upgrade.getEffect() * 100).toFixed(0)}%</span>
+                            ${isMaxLevel ? 
+                                `<span class="px-3 py-1 text-sm rounded bg-opacity-20 bg-success">Maximum Level</span>` : 
+                                `<button class="upgrade-enlightenment-btn px-3 py-1 text-sm rounded ${canAfford ? 'btn-primary' : 'btn-primary opacity-50'}" data-upgrade-id="${upgrade.id}" ${!canAfford ? 'disabled' : ''}>
+                                    <i class="fas fa-arrow-up mr-1"></i> Upgrade (${upgrade.getCost()} EP)
+                                </button>`
+                            }
+                        </div>
+                    </div>
+                `;
+                upgradesContainer.appendChild(upgradeElement);
+            });
+            
+            // Add event listeners for buttons
+            document.querySelectorAll('.upgrade-enlightenment-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const upgradeId = this.getAttribute('data-upgrade-id');
+                    const upgrade = gameData.enlightenmentUpgrades.find(u => u.id === upgradeId);
+                    
+                    if (upgrade && upgrade.level < upgrade.maxLevel) {
+                        const upgradeCost = upgrade.getCost();
+                        
+                        if (gameData.resources.ep >= upgradeCost) {
+                            gameData.resources.ep -= upgradeCost;
+                            upgrade.level++;
+                            
+                            showNotification(`${upgrade.name} upgraded to level ${upgrade.level}!`);
+                            updateEnlightenmentUpgrades();
+                            updateResourceDisplay();
+                            saveGame();
+                        } else {
+                            showNotification("Not enough Enlightenment Points!", "error");
+                        }
+                    }
+                });
+            });
+        }
+        
+        function updateEnlightenmentRequirements() {
+            const reqBooks = document.getElementById('req-books');
+            const reqFacilities = document.getElementById('req-facilities');
+            const reqResearch = document.getElementById('req-research');
+            
+            const reqBooksCount = document.getElementById('req-books-count');
+            const reqFacilitiesCount = document.getElementById('req-facilities-count');
+            const reqResearchCount = document.getElementById('req-research-count');
+            
+            // Check books requirement
+            const completedBooksCount = gameData.stats.currentRun.booksCompleted;
+            reqBooksCount.textContent = completedBooksCount;
+            if (completedBooksCount >= 5) {
+                reqBooks.classList.remove('text-red-500');
+                reqBooks.classList.add('text-green-500');
+                reqBooks.querySelector('i').className = 'fas fa-check-circle mr-1';
+            } else {
+                reqBooks.classList.remove('text-green-500');
+                reqBooks.classList.add('text-red-500');
+                reqBooks.querySelector('i').className = 'fas fa-times-circle mr-1';
+            }
+            
+            // Check facilities requirement
+            const facilitiesCount = gameData.facilities.owned.length;
+            reqFacilitiesCount.textContent = facilitiesCount;
+            if (facilitiesCount >= 3) {
+                reqFacilities.classList.remove('text-red-500');
+                reqFacilities.classList.add('text-green-500');
+                reqFacilities.querySelector('i').className = 'fas fa-check-circle mr-1';
+            } else {
+                reqFacilities.classList.remove('text-green-500');
+                reqFacilities.classList.add('text-red-500');
+                reqFacilities.querySelector('i').className = 'fas fa-times-circle mr-1';
+            }
+            
+            // Check research requirement
+            const researchCount = gameData.research.owned.length;
+            reqResearchCount.textContent = researchCount;
+            if (researchCount >= 3) {
+                reqResearch.classList.remove('text-red-500');
+                reqResearch.classList.add('text-green-500');
+                reqResearch.querySelector('i').className = 'fas fa-check-circle mr-1';
+            } else {
+                reqResearch.classList.remove('text-green-500');
+                reqResearch.classList.add('text-red-500');
+                reqResearch.querySelector('i').className = 'fas fa-times-circle mr-1';
+            }
+            
+            // Update potential EP gain
+            document.getElementById('potential-ep-gain').textContent = formatNumber(calculatePotentialEP());
+            
+            // Update enlightenment button
+            const enlightenmentBtn = document.getElementById('enlightenment-btn');
+            if (completedBooksCount >= 5 && facilitiesCount >= 3 && researchCount >= 3) {
+                enlightenmentBtn.disabled = false;
+                enlightenmentBtn.classList.remove('opacity-50');
+            } else {
+                enlightenmentBtn.disabled = true;
+                enlightenmentBtn.classList.add('opacity-50');
+            }
+        }
+        
+        function updateStatsDisplay() {
+            // All-Time Stats
+            document.getElementById('stats-all-books-completed').textContent = formatNumber(gameData.stats.allTime.booksCompleted);
+            document.getElementById('stats-all-most-books').textContent = formatNumber(gameData.stats.allTime.mostBooksInOneRun);
+            document.getElementById('stats-all-pages-read').textContent = formatNumber(gameData.stats.allTime.pagesRead);
+            document.getElementById('stats-all-most-pages').textContent = formatNumber(gameData.stats.allTime.mostPagesInOneRun);
+            document.getElementById('stats-all-most-pages-day').textContent = formatNumber(gameData.stats.allTime.mostPagesInOneDay);
+            document.getElementById('stats-all-kp-generated').textContent = formatNumber(gameData.stats.allTime.kpGenerated);
+            document.getElementById('stats-all-rp-generated').textContent = formatNumber(gameData.stats.allTime.rpGenerated);
+            document.getElementById('stats-all-qf-gained').textContent = formatNumber(gameData.stats.allTime.qfGained);
+            document.getElementById('stats-all-ep-earned').textContent = formatNumber(gameData.stats.allTime.epEarned);
+            document.getElementById('stats-all-prestige-count').textContent = formatNumber(gameData.stats.allTime.prestigeCount);
+            document.getElementById('stats-all-relics-found').textContent = formatNumber(gameData.stats.allTime.relicsFound);
+            
+            // Current Run Stats
+            document.getElementById('stats-current-books-completed').textContent = formatNumber(gameData.stats.currentRun.booksCompleted);
+            document.getElementById('stats-current-pages-read').textContent = formatNumber(gameData.stats.currentRun.pagesRead);
+            document.getElementById('stats-current-most-pages-day').textContent = formatNumber(gameData.stats.currentRun.mostPagesInOneDay);
+            document.getElementById('stats-current-kp-generated').textContent = formatNumber(gameData.stats.currentRun.kpGenerated);
+            document.getElementById('stats-current-rp-generated').textContent = formatNumber(gameData.stats.currentRun.rpGenerated);
+            document.getElementById('stats-current-qf-gained').textContent = formatNumber(gameData.stats.currentRun.qfGained);
+        }
+        
+        function updateUI() {
+            updateResourceDisplay();
+            updateRPProgressDisplay();
+            updateBookLists();
+            updateFacilitiesList();
+            updateResearchList();
+            updateRelicsList();
+            updateRelicHuntDisplay();
+            updateEnlightenmentUpgrades();
+            updateEnlightenmentRequirements();
+            updateStatsDisplay();
+        }
+        
+        function showNotification(message, type = "info") {
+            if (!gameData.settings.showNotifications) return;
+            
+            const notificationArea = document.getElementById('notification-area');
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            
+            // Set color based on type
+            if (type === "error") {
+                notification.style.backgroundColor = "var(--danger)";
+            } else if (type === "success") {
+                notification.style.backgroundColor = "var(--success)";
+            } else {
+                notification.style.backgroundColor = "var(--primary)";
+            }
+            
+            notification.textContent = message;
+            notificationArea.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            // Hide and remove notification
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+        
+        function showFloatingResource(amount, type, x, y) {
+            const floatingResource = document.createElement('div');
+            floatingResource.className = 'floating-resource';
+            
+            // Set color based on resource type
+            if (type === "kp") {
+                floatingResource.style.color = "#4CAF50";
+                floatingResource.textContent = `+${amount} KP`;
+            } else if (type === "rp") {
+                floatingResource.style.color = "#2196F3";
+                floatingResource.textContent = `+${amount} RP`;
+            } else if (type === "qf") {
+                floatingResource.style.color = "#9C27B0";
+                floatingResource.textContent = `+${amount} QF`;
+            } else if (type === "ep") {
+                floatingResource.style.color = "#FF9800";
+                floatingResource.textContent = `+${amount} EP`;
+            }
+            
+            // Position the element
+            floatingResource.style.left = `${x}px`;
+            floatingResource.style.top = `${y}px`;
+            
+            // Add to document
+            document.body.appendChild(floatingResource);
+            
+            // Remove after animation completes
+            setTimeout(() => {
+                floatingResource.remove();
+            }, 1500);
+        }
+        
+        function logReading(title, genre, customGenre, pagesRead, completed) {
+            // First check if the book already exists
+            let existingBook = gameData.books.current.find(book => book.title.toLowerCase() === title.toLowerCase());
+            
+            if (existingBook) {
+                // Update existing book
+                existingBook.pagesRead += pagesRead;
+                existingBook.lastRead = Date.now();
+                
+                // Calculate KP gain
+                const kpGain = applyReadingMultipliers(Math.floor(pagesRead * 0.5));
+                
+                // Add KP
+                gameData.resources.kp += kpGain;
+                gameData.resourcesGenerated.kp += kpGain;
+                gameData.stats.currentRun.kpGenerated += kpGain;
+                gameData.stats.allTime.kpGenerated += kpGain;
+                
+                // Try for QF
+                const qfChance = calculateQFChance();
+                if (Math.random() < qfChance) {
+                    const qfGain = calculateQFGain(1);
+                    gameData.resources.qf += qfGain;
+                    gameData.stats.currentRun.qfGained += qfGain;
+                    gameData.stats.allTime.qfGained += qfGain;
+                    
+                    showNotification(`You found ${qfGain} Quantum Fragment${qfGain > 1 ? 's' : ''}!`, "success");
+                }
+                
+                // Check if book should be completed
+                if (completed) {
+                    completeBook(existingBook);
+                }
+                
+                showNotification(`Logged ${pagesRead} pages for "${title}". Gained ${kpGain} KP!`);
+                
+                // Show floating resource
+                const button = document.querySelector('button[type="submit"]');
+                const rect = button.getBoundingClientRect();
+                showFloatingResource(kpGain, "kp", rect.right, rect.top);
+            } else {
+                // Create new book
+                const newBook = {
+                    id: 'book_' + Date.now(),
+                    title: title,
+                    genre: genre,
+                    customGenre: genre === 'Custom' ? customGenre : null,
+                    pagesRead: pagesRead,
+                    startDate: Date.now(),
+                    lastRead: Date.now()
+                };
+                
+                gameData.books.current.push(newBook);
+                
+                // Calculate KP gain
+                const kpGain = applyReadingMultipliers(Math.floor(pagesRead * 0.5));
+                
+                // Add KP
+                gameData.resources.kp += kpGain;
+                gameData.resourcesGenerated.kp += kpGain;
+                gameData.stats.currentRun.kpGenerated += kpGain;
+                gameData.stats.allTime.kpGenerated += kpGain;
+                
+                // Try for QF
+                const qfChance = calculateQFChance();
+                if (Math.random() < qfChance) {
+                    const qfGain = calculateQFGain(1);
+                    gameData.resources.qf += qfGain;
+                    gameData.stats.currentRun.qfGained += qfGain;
+                    gameData.stats.allTime.qfGained += qfGain;
+                    
+                    showNotification(`You found ${qfGain} Quantum Fragment${qfGain > 1 ? 's' : ''}!`, "success");
+                }
+                
+                // Check if book should be completed
+                if (completed) {
+                    completeBook(newBook);
+                }
+                
+                showNotification(`Started reading "${title}". Logged ${pagesRead} pages and gained ${kpGain} KP!`);
+                
+                // Show floating resource
+                const button = document.querySelector('button[type="submit"]');
+                const rect = button.getBoundingClientRect();
+                showFloatingResource(kpGain, "kp", rect.right, rect.top);
+            }
+            
+            // Update stats
+            gameData.stats.currentRun.pagesRead += pagesRead;
+            gameData.stats.allTime.pagesRead += pagesRead;
+            
+            // Track daily pages
+            const today = new Date().toLocaleDateString();
+            if (!gameData.stats.currentRun.dailyPages[today]) {
+                gameData.stats.currentRun.dailyPages[today] = 0;
+            }
+            gameData.stats.currentRun.dailyPages[today] += pagesRead;
+            
+            // Update daily record if needed
+            if (gameData.stats.currentRun.dailyPages[today] > gameData.stats.currentRun.mostPagesInOneDay) {
+                gameData.stats.currentRun.mostPagesInOneDay = gameData.stats.currentRun.dailyPages[today];
+            }
+            
+            if (gameData.stats.currentRun.dailyPages[today] > gameData.stats.allTime.mostPagesInOneDay) {
+                gameData.stats.allTime.mostPagesInOneDay = gameData.stats.currentRun.dailyPages[today];
+            }
+            
+            // Update UI
+            updateUI();
+            
+            // Save game
+            saveGame();
+        }
+        
+        function completeBook(book) {
+            // Remove from current books
+            const bookIndex = gameData.books.current.findIndex(b => b.id === book.id);
+            if (bookIndex !== -1) {
+                gameData.books.current.splice(bookIndex, 1);
+            }
+            
+            // Add completion date
+            book.completedDate = Date.now();
+            
+            // Add to completed books
+            gameData.books.completed.unshift(book);
+            
+            // Update stats
+            gameData.stats.currentRun.booksCompleted++;
+            gameData.stats.allTime.booksCompleted++;
+            
+            // Award bonus KP for completion
+            const completionBonus = calculateBookCompletion(book);
+            gameData.resources.kp += completionBonus;
+            gameData.resourcesGenerated.kp += completionBonus;
+            gameData.stats.currentRun.kpGenerated += completionBonus;
+            gameData.stats.allTime.kpGenerated += completionBonus;
+            
+            // Try for QF (higher chance on completion)
+            const qfChance = calculateQFChance() * 2;
+            if (Math.random() < qfChance) {
+                const qfGain = calculateQFGain(2);
+                gameData.resources.qf += qfGain;
+                gameData.stats.currentRun.qfGained += qfGain;
+                gameData.stats.allTime.qfGained += qfGain;
+                
+                showNotification(`You found ${qfGain} Quantum Fragment${qfGain > 1 ? 's' : ''} for completing "${book.title}"!`, "success");
+            }
+            
+            // Update enlightenment requirements
+            updateEnlightenmentRequirements();
+            
+            // Notification
+            showNotification(`Completed "${book.title}"! Gained ${completionBonus} bonus KP.`, "success");
+            
+            // Save game
+            saveGame();
+        }
+        
+        function discoverFacility() {
+            const kpCost = gameData.discoveryData.facilityDiscoveryCost.kp;
+            const rpCost = gameData.discoveryData.facilityDiscoveryCost.rp;
+            
+            if (gameData.resources.kp < kpCost || gameData.resources.rp < rpCost) {
+                showNotification("Not enough resources for facility discovery!", "error");
+                return;
+            }
+            
+            // Spend resources
+            gameData.resources.kp -= kpCost;
+            gameData.resources.rp -= rpCost;
+            
+            // Generate new facility
+            const newFacility = generateFacility();
+            gameData.facilities.discovered.push(newFacility);
+            
+            // Increase discovery cost
+            gameData.discoveryData.facilityDiscoveryCost.kp = Math.floor(kpCost * 1.2);
+            gameData.discoveryData.facilityDiscoveryCost.rp = Math.floor(rpCost * 1.15);
+            
+            // Update UI
+            updateFacilitiesList();
+            updateResourceDisplay();
+            
+            // Notification
+            showNotification(`Discovered new facility: ${newFacility.name}!`, "success");
+            
+            // Save game
+            saveGame();
+        }
+        
+        function discoverResearch() {
+            const rpCost = gameData.discoveryData.researchDiscoveryCost.rp;
+            
+            if (gameData.resources.rp < rpCost) {
+                showNotification("Not enough Research Points for research discovery!", "error");
+                return;
+            }
+            
+            // Spend resources
+            gameData.resources.rp -= rpCost;
+            
+            // Generate new research
+            const newResearch = generateResearch();
+            gameData.research.discovered.push(newResearch);
+            
+            // Increase discovery cost
+            gameData.discoveryData.researchDiscoveryCost.rp = Math.floor(rpCost * 1.25);
+            
+            // Update UI
+            updateResearchList();
+            updateResourceDisplay();
+            
+            // Notification
+            showNotification(`Discovered new research: ${newResearch.name}!`, "success");
+            
+            // Save game
+            saveGame();
+        }
+        
+        function getRarityColor(rarity) {
+            return RARITIES[rarity].class;
+        }
+        
+        function updateDarkMode() {
+            const isDarkMode = gameData.settings.darkMode;
+            
+            if (isDarkMode) {
+                document.body.classList.remove('light');
+                document.body.classList.add('dark');
+            } else {
+                document.body.classList.remove('dark');
+                document.body.classList.add('light');
+            }
+            
+            // Update toggle switch
+            document.getElementById('dark-mode-toggle').checked = isDarkMode;
+        }
+        
+        function updateTextSize() {
+            const textSize = gameData.settings.textSize;
+            document.documentElement.style.fontSize = `${100 * textSize}%`;
+        }
+        
+        // Tab Navigation
+        function setupTabs() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.id.replace('tab-', 'content-');
+                    
+                    // Set active button
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Show target panel, hide others
+                    tabPanels.forEach(panel => {
+                        if (panel.id === targetId) {
+                            panel.classList.remove('hidden');
+                        } else {
+                            panel.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+        }
+        
+        function setupModalHandlers() {
+            // Export modal
+            document.getElementById('export-game-btn').addEventListener('click', () => {
+                document.getElementById('export-code').value = exportGame();
+                document.getElementById('export-modal').style.display = 'flex';
+            });
+            
+            // Import modal
+            document.getElementById('import-game-btn').addEventListener('click', () => {
+                document.getElementById('import-code').value = '';
+                document.getElementById('import-modal').style.display = 'flex';
+            });
+            
+            // Reset modal
+            document.getElementById('hard-reset-btn').addEventListener('click', () => {
+                document.getElementById('reset-modal').style.display = 'flex';
+            });
+            
+            // Close modals
+            document.querySelectorAll('.close-modal').forEach(closeBtn => {
+                closeBtn.addEventListener('click', () => {
+                    closeBtn.closest('.modal').style.display = 'none';
+                });
+            });
+            
+            // Copy export code
+            document.getElementById('copy-export-btn').addEventListener('click', () => {
+                const exportCode = document.getElementById('export-code');
+                exportCode.select();
+                document.execCommand('copy');
+                showNotification('Save code copied to clipboard!');
+            });
+            
+            // Cancel import
+            document.getElementById('cancel-import-btn').addEventListener('click', () => {
+                document.getElementById('import-modal').style.display = 'none';
+            });
+            
+            // Confirm import
+            document.getElementById('confirm-import-btn').addEventListener('click', () => {
+                const importCode = document.getElementById('import-code').value.trim();
+                if (importCode) {
+                    const success = importGame(importCode);
+                    if (success) {
+                        document.getElementById('import-modal').style.display = 'none';
+                    }
+                } else {
+                    showNotification('Please enter a save code to import.', 'error');
+                }
+            });
+            
+            // Cancel reset
+            document.getElementById('cancel-reset-btn').addEventListener('click', () => {
+                document.getElementById('reset-modal').style.display = 'none';
+            });
+            
+            // Confirm reset
+            document.getElementById('confirm-reset-btn').addEventListener('click', () => {
+                resetGame();
+                document.getElementById('reset-modal').style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', event => {
+                    if (event.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        function setupEventListeners() {
+            // Reading form submission
+            document.getElementById('reading-form').addEventListener('submit', event => {
+                event.preventDefault();
+                
+                const title = document.getElementById('book-title').value.trim();
+                const genre = document.getElementById('book-genre').value;
+                const customGenre = document.getElementById('custom-genre').value.trim();
+                const pagesRead = parseInt(document.getElementById('pages-read').value);
+                const completed = document.getElementById('book-completed').checked;
+                
+                if (title && pagesRead > 0) {
+                    logReading(title, genre, customGenre, pagesRead, completed);
+                    
+                    // Reset form
+                    document.getElementById('book-title').value = '';
+                    document.getElementById('pages-read').value = '';
+                    document.getElementById('book-completed').checked = false;
+                    document.getElementById('custom-genre-container').classList.add('hidden');
+                }
+            });
+            
+            // Custom genre toggle
+            document.getElementById('book-genre').addEventListener('change', event => {
+                const customGenreContainer = document.getElementById('custom-genre-container');
+                if (event.target.value === 'Custom') {
+                    customGenreContainer.classList.remove('hidden');
+                } else {
+                    customGenreContainer.classList.add('hidden');
+                }
+            });
+            
+            // Facility discovery button
+            document.getElementById('discover-facility-btn').addEventListener('click', discoverFacility);
+            
+            // Research discovery button
+            document.getElementById('discover-research-btn').addEventListener('click', discoverResearch);
+            
+            // Relic hunt button
+            document.getElementById('hunt-relic-btn').addEventListener('click', startRelicHunt);
+            
+            // Cancel relic hunt button
+            document.getElementById('cancel-relic-hunt-btn').addEventListener('click', cancelRelicHunt);
+            
+            // Enlightenment button
+            document.getElementById('enlightenment-btn').addEventListener('click', performEnlightenment);
+            
+            // Save game button
+            document.getElementById('save-game-btn').addEventListener('click', saveGame);
+            
+            // Dark mode toggle
+            document.getElementById('dark-mode-toggle').addEventListener('change', event => {
+                gameData.settings.darkMode = event.target.checked;
+                updateDarkMode();
+                saveGame();
+            });
+            
+            // Text size buttons
+            document.getElementById('text-size-smaller').addEventListener('click', () => {
+                if (gameData.settings.textSize > 0.7) {
+                    gameData.settings.textSize -= 0.1;
+                    updateTextSize();
+                    saveGame();
+                }
+            });
+            
+            document.getElementById('text-size-larger').addEventListener('click', () => {
+                if (gameData.settings.textSize < 1.5) {
+                    gameData.settings.textSize += 0.1;
+                    updateTextSize();
+                    saveGame();
+                }
+            });
+            
+            document.getElementById('text-size-reset').addEventListener('click', () => {
+                gameData.settings.textSize = 1;
+                updateTextSize();
+                saveGame();
+            });
+            
+            // Notification toggle
+            document.getElementById('notifications-toggle').addEventListener('change', event => {
+                gameData.settings.showNotifications = event.target.checked;
+                saveGame();
+            });
+            
+            // Sort buttons
+            document.getElementById('sort-books-btn').addEventListener('click', () => {
+                gameData.books.current.sort((a, b) => b.lastRead - a.lastRead);
+                updateBookLists();
+            });
+            
+            document.getElementById('sort-facilities-btn').addEventListener('click', () => {
+                gameData.facilities.discovered.sort((a, b) => {
+                    // Sort by owned first, then by rarity
+                    const aOwned = gameData.facilities.owned.some(f => f.id === a.id);
+                    const bOwned = gameData.facilities.owned.some(f => f.id === b.id);
+                    
+                    if (aOwned !== bOwned) {
+                        return aOwned ? -1 : 1;
+                    }
+                    
+                    const rarityValue = {
+                        "common": 1,
+                        "uncommon": 2,
+                        "rare": 3,
+                        "epic": 4
+                    };
+                    
+                    return rarityValue[b.rarity] - rarityValue[a.rarity];
+                });
+                updateFacilitiesList();
+            });
+            
+            document.getElementById('sort-research-btn').addEventListener('click', () => {
+                gameData.research.discovered.sort((a, b) => {
+                    // Sort by owned first, then by rarity
+                    const aOwned = gameData.research.owned.some(r => r.id === a.id);
+                    const bOwned = gameData.research.owned.some(r => r.id === b.id);
+                    
+                    if (aOwned !== bOwned) {
+                        return aOwned ? -1 : 1;
+                    }
+                    
+                    const rarityValue = {
+                        "common": 1,
+                        "uncommon": 2,
+                        "rare": 3,
+                        "epic": 4
+                    };
+                    
+                    return rarityValue[b.rarity] - rarityValue[a.rarity];
+                });
+                updateResearchList();
+            });
+        }
+        
+        // Main game loop
+        function gameLoop() {
+            const now = Date.now();
+            const elapsed = (now - gameData.lastActivity) / 1000; // seconds
+            
+            // Update last activity
+            gameData.lastActivity = now;
+            
+            // Apply resource generation
+            const multipliers = applyResourceMultipliers();
+            
+            // RP generation
+            const rpGain = multipliers.rpGen * (elapsed / 60); // per minute to per second
+            
+            // Update RP progress
+            gameData.rpProgress.current += rpGain;
+            if (gameData.rpProgress.current >= gameData.rpProgress.threshold) {
+                const fullPoints = Math.floor(gameData.rpProgress.current);
+                gameData.resources.rp += fullPoints;
+                gameData.resourcesGenerated.rp += fullPoints;
+                gameData.stats.currentRun.rpGenerated += fullPoints;
+                gameData.stats.allTime.rpGenerated += fullPoints;
+                
+                // Reset progress but keep fractional part
+                gameData.rpProgress.current -= fullPoints;
+                
+                // Increase threshold slightly for next RP (makes the progress bar more interesting)
+                gameData.rpProgress.threshold = 1;
+            }
+            
+            // Update RP progress display
+            updateRPProgressDisplay();
+            
+            // Auto KP from research if available
+            if (multipliers.autoKP > 0) {
+                const autoKpGain = multipliers.autoKP * (elapsed / 60); // per minute to per second
+                gameData.resources.kp += autoKpGain;
+                gameData.resourcesGenerated.kp += autoKpGain;
+                gameData.stats.currentRun.kpGenerated += autoKpGain;
+                gameData.stats.allTime.kpGenerated += autoKpGain;
+            }
+            
+            // Check if we should auto-save
+            if (gameData.settings.autoSave && now - gameData.lastSave >= SAVE_INTERVAL) {
+                saveGame();
+            }
+            
+            // Update UI
+            updateResourceDisplay();
+        }
+        
+        // Check if dark mode is preferred
+        function checkSystemDarkMode() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                gameData.settings.darkMode = true;
+                updateDarkMode();
+            }
+            
+            // Listen for changes in the color scheme
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                if (event.matches) {
+                    gameData.settings.darkMode = true;
+                } else {
+                    gameData.settings.darkMode = false;
+                }
+                updateDarkMode();
+                saveGame();
+            });
+        }
+        
+        // Initialize game
+        function initGame() {
+            // Setup UI components
+            setupTabs();
+            setupModalHandlers();
+            setupEventListeners();
+            
+            // Load save
+            loadGame();
+            
+            // Set initial dark mode
+            checkSystemDarkMode();
+            
+            // Set initial text size
+            updateTextSize();
+            
+            // Start game loop
+            setInterval(gameLoop, RESOURCE_TICK_INTERVAL);
+            
+            // Initial UI update
+            updateUI();
+        }
+        
+        // Start the game
+        initGame();
+    </script>
+</body>
+</html>
